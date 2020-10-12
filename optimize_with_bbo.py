@@ -240,7 +240,7 @@ def CandidateGridworldPDIS(pi, param=10, multiplier=1):
 
     # print(g1, "g1", g2, "g2", pho,"pho",sol)
     # print(pho)
-    return -pho
+    return pho
 
 
 def getCandidateSolution(param=100):
