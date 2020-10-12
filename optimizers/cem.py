@@ -118,9 +118,9 @@ def main():
         # print("x_min:=", x_min)
                 print("f_min:=", CandidateGridworldPDIS(x_min, episodes, multiplier=1))
                 sys.stdout.flush()
-            print("--------------------------")
-            print("f_min:=", CandidateGridworldPDIS(x_min, episodes, multiplier=1))
- 
+        print("--------------------------")
+        print("f_min:=", CandidateGridworldPDIS(x_min, episodes, multiplier=1))
+        sys.stdout.flush()
 
 if __name__ == "__main__":
     main()
