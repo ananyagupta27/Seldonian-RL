@@ -172,7 +172,7 @@ def CandidateCartpolePDIS(theta, param=10, verbose=0, multiplier=2):
     g2 = sample_mean2 + (multiplier * std2 * tinv(1 - delta, no_of_episodes - 1)) / np.sqrt(no_of_episodes)
     if g2 >= 0:
         G += -100000
-    print("G=",G, sol)
+    # print("G=",G, sol)
     return G
 
 
