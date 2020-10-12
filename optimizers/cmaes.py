@@ -8,7 +8,7 @@ import os
 sys.path.insert(1, os.path.join(os.path.dirname(sys.path[0]), 'environments'))
 sys.path.insert(1, os.path.join(os.path.dirname(sys.path[0]), 'optimizers'))
 sys.path.insert(1, os.path.dirname(sys.path[0]))
-from optimize_cartpole import CandidateCartpole, CandidateMountaincar
+from optimize_cartpole import CandidateCartpolePDIS, CandidateMountaincarPDIS
 
 
 class CMAES():
@@ -40,7 +40,7 @@ class CMAES():
         self.eigenval = 0
         self.chiN = self.N ** 0.5 * (1 - 1 / (4 * self.N) + 1 / (21 * self.N ^ 2))
 
-    def generation_loop(self):
+    def generation_loop(self, episodes):
         countEval = 0
         prevBest = np.inf
         best = np.inf
@@ -50,8 +50,8 @@ class CMAES():
         while countEval < self.stopeval:
             for k in range(0, self.lambd):
                 arx[:, k] = (self.xmean + self.sigma * np.dot(self.B, (
-                            self.D.reshape(-1, 1) * np.random.randn(self.N, 1)))).reshape(self.N, )
-                arfitness[k] = self.evaluationFunction(arx[:, k])
+                        self.D.reshape(-1, 1) * np.random.randn(self.N, 1)))).reshape(self.N, )
+                arfitness[k] = self.evaluationFunction(arx[:, k], episodes)
                 countEval += 1
 
             arindex = np.argsort(-arfitness)
@@ -91,9 +91,14 @@ class CMAES():
                 print(np.max(self.D) > 1e7 * np.min(self.D))
                 print(arfitness[0] <= self.stopfitness)
                 break
-            print(self.evaluationFunction(arx[:, arindex[0]]))
-            print(arfitness[0])
 
+            if countEval % 100 == 0:
+                print("current generation")
+                print(self.evaluationFunction(arx[:, arindex[0]]))
+                print(arfitness[0])
+                print(arx[:, arindex[0]])
+
+                sys.stdout.flush()
             prevBest = best
             best = self.evaluationFunction(arx[:, arindex[0]])
             if abs(prevBest - best) < 1e-10:
@@ -110,21 +115,39 @@ def func(x):
 
 def main():
     # theta = np.zeros((16 * 3))
-    theta = np.zeros((256 * 2))
+
     # sigma = 0.5
     #
     # popSize = 10
     # numElite = 5
     # numEpisodes = 100
     # evaluationFunction = CandidateMountaincar
-    evaluationFunction = CandidateCartpole
+    # evaluationFunction = CandidateCartpole
     # cem = CEM(theta, sigma, popSize, numElite, numEpisodes, evaluationFunction)
     #
     # for _ in range(1000):
     #     cem.train()
 
-    cmaes = CMAES(theta, evaluationFunction)
-    print(evaluationFunction(cmaes.generation_loop()))
+
+
+
+    episodes = int(sys.argv[1])
+    for _ in range(10):
+        theta = np.zeros((256 * 2))
+        evaluationFunction = CandidateCartpolePDIS
+        cmaes = CMAES(theta, evaluationFunction)
+        # print(evaluationFunction(cmaes.generation_loop()))
+        x_min = cmaes.generation_loop(episodes)
+
+            # if it % 100 == 0:
+            #     print("episodes", episodes)
+            #     # print("x_min:=", x_min)
+            #     print("f_min:=", CandidateCartpolePDIS(x_min, episodes, multiplier=1))
+            #     sys.stdout.flush()
+        print("--------------------------")
+        print("x_min:=", x_min)
+        print("f_min:=", evaluationFunction(x_min, episodes, multiplier=1))
+        sys.stdout.flush()
 
 
 if __name__ == "__main__":

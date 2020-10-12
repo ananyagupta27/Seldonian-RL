@@ -119,6 +119,7 @@ def main():
                 print("f_min:=", CandidateGridworldPDIS(x_min, episodes, multiplier=1))
                 sys.stdout.flush()
         print("--------------------------")
+        print("x_min:=", x_min)
         print("f_min:=", CandidateGridworldPDIS(x_min, episodes, multiplier=1))
         sys.stdout.flush()
 

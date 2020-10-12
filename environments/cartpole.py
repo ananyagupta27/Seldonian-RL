@@ -91,8 +91,8 @@ class Cartpole(Environment):
         """
         returns a reward for the transition (state,action,next_state)
         """
-        # if self.terminal():
-        #     return 0
+        if self.terminal():
+            return 0
         return 1.0
 
     def step(self, action: int) -> Tuple[np.ndarray, float, bool]:

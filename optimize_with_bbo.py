@@ -208,12 +208,12 @@ def CandidateGridworldPDIS(pi, param=10, multiplier=1):
         temp_sum = 0
         norm = 0
         r = 0
-        for t in range(1, L):
+        for horizon_iterator in range(1, L):
             env.reset()
             s = env.get_state()
             num = 1
             den = 1
-            for j in range(t):
+            for j in range(horizon_iterator):
                 a = ragent.get_action(s)
                 _, r, _ = env.step(a)
                 num *= pi[s, a]
@@ -222,7 +222,7 @@ def CandidateGridworldPDIS(pi, param=10, multiplier=1):
                 s = s_prime
 
             # print(temp_sum, "tempsum", "r=", r, "num", num, "den", den)
-            temp_sum += (env.gamma ** (t - 1)) * r * num / den
+            temp_sum += (env.gamma ** (horizon_iterator - 1)) * r * num / den
 
         pho += temp_sum
         sol.append(temp_sum)
