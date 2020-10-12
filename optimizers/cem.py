@@ -110,14 +110,17 @@ def main():
         evaluationFunction = CandidateGridworldPDIS
         cem = CEM(theta, sigma, popSize, numElite, episodes, evaluationFunction)
 
-        for _ in range(1000):
+        for it in range(1000):
             x_min = cem.train()
-
-        print("episodes", episodes)
+            if it % 100 == 0:
+                
+                print("episodes", episodes)
         # print("x_min:=", x_min)
-        print("f_min:=", CandidateGridworldPDIS(x_min, episodes, multiplier=1))
-        sys.stdout.flush()
-
+                print("f_min:=", CandidateGridworldPDIS(x_min, episodes, multiplier=1))
+                sys.stdout.flush()
+            print("--------------------------")
+            print("f_min:=", CandidateGridworldPDIS(x_min, episodes, multiplier=1))
+ 
 
 if __name__ == "__main__":
     main()
