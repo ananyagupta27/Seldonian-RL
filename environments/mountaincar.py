@@ -22,12 +22,13 @@ class Mountaincar(Environment):
 
     def __init__(self):
         self._name = "MountainCar"
+        self.numActions = 3
         self._action = None
         self._reward = 0
         self._isEnd = False
 
         self._gamma = 1.0
-        ranges = np.zeros((2,2))
+        ranges = np.zeros((2, 2))
         ranges[0, :] = [-1.2, 0.5]
         ranges[1, :] = [-0.07, 0.07]
         self.observation_space = spaces.Box(ranges[:, 0], ranges[:, 1], dtype=np.float64)
@@ -54,6 +55,12 @@ class Mountaincar(Environment):
     def gamma(self) -> float:
         return self._gamma
 
+    def getNumActions(self):
+        return self.numActions
+
+    def getStateDims(self):
+        return self.state.shape[0]
+
     def nextState(self, state: np.ndarray, action: int) -> np.ndarray:
         """
         Compute the next state of the pendulum using the euler approximation to the dynamics
@@ -64,12 +71,20 @@ class Mountaincar(Environment):
         v = np.clip(v, self.observation_space.low[1], self.observation_space.high[1])
         x += v
 
-        return np.array([x, v])
+        state = np.array([x, v])
+        for i, item in enumerate(self.observation_space.low):
+            if state[i] < self.observation_space.low[i]:
+                state[i] = self.observation_space.low[i]
+            elif state[i] > self.observation_space.high[i]:
+                state[i] = self.observation_space.high[i]
+        return state
 
     def R(self, state: np.ndarray, action: int, next_state: np.ndarray) -> float:
         """
         returns a reward for the transition (state,action,next_state)
         """
+        if self.terminal():
+            return 0
         return -1.0
 
     def step(self, action: int) -> Tuple[np.ndarray, float, bool]:

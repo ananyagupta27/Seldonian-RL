@@ -28,6 +28,14 @@ class Environment(ABC):
         pass
 
     @abstractmethod
+    def getNumActions(self):
+        pass
+
+    @abstractmethod
+    def getStateDims(self):
+        pass
+
+    @abstractmethod
     def step(self, action):
         """
         An action is taken in the environment and the next

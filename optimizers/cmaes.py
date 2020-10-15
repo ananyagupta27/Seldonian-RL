@@ -8,18 +8,21 @@ import os
 sys.path.insert(1, os.path.join(os.path.dirname(sys.path[0]), 'environments'))
 sys.path.insert(1, os.path.join(os.path.dirname(sys.path[0]), 'optimizers'))
 sys.path.insert(1, os.path.dirname(sys.path[0]))
-from optimize_cartpole import CandidateCartpolePDIS, CandidateMountaincarPDIS
+
+from .optimizer import Optimizer
 
 
-class CMAES():
-    def __init__(self, theta, func):
+class CMAES(Optimizer):
+
+    def __init__(self, theta, evaluationFunction):
+        self.name = "CMAES"
         self.theta = theta
-        self.evaluationFunction = func
+        self.evaluationFunction = evaluationFunction
         self.N = theta.shape[0]
         self.xmean = np.random.uniform(0, 1, self.N).reshape(-1, 1)
         self.sigma = 0.3
-        self.stopfitness = 1e10
-        self.stopeval = 1e3 * self.N ** 2
+        self.stopfitness = 1e-10
+        self.stopeval = 50 * self.N ** 2
         self.lambd = int(4 + np.floor(3 * np.log(self.N)))
         self.mu = self.lambd / 2
         self.weights = np.log(self.mu + 1 / 2) - (np.log(range(1, int(self.mu) + 1))).reshape(-1, 1)
@@ -40,10 +43,14 @@ class CMAES():
         self.eigenval = 0
         self.chiN = self.N ** 0.5 * (1 - 1 / (4 * self.N) + 1 / (21 * self.N ^ 2))
 
-    def generation_loop(self, episodes):
+
+    def name(self):
+        return self.name
+
+    def run_optimizer(self, verbose=True):
         countEval = 0
-        prevBest = np.inf
-        best = np.inf
+        # prevBest = -np.inf
+        # best = -np.inf
 
         arx = np.zeros((self.N, int(self.lambd)))
         arfitness = np.zeros(int(self.lambd))
@@ -51,11 +58,12 @@ class CMAES():
             for k in range(0, self.lambd):
                 arx[:, k] = (self.xmean + self.sigma * np.dot(self.B, (
                         self.D.reshape(-1, 1) * np.random.randn(self.N, 1)))).reshape(self.N, )
-                arfitness[k] = self.evaluationFunction(arx[:, k], episodes)
+                arfitness[k] = self.evaluationFunction(arx[:, k])
                 countEval += 1
 
-            arindex = np.argsort(-arfitness)
+            arindex = np.argsort(arfitness)
             arfitness = arfitness[arindex]
+
             xold = self.xmean
             self.xmean = arx[:, arindex[:self.mu]] @ self.weights
 
@@ -81,74 +89,84 @@ class CMAES():
                 self.C = np.triu(self.C) + np.transpose(np.triu(self.C, 1))
                 try:
                     self.D, self.B = np.linalg.eig(self.C)
+
                 except:
                     print("Error", self.C)
                     exit()
                 self.D = np.sqrt(self.D).reshape(self.N, 1)
                 self.invsqrtC = self.B * np.diag(np.transpose(np.power(self.D, -1))[0]) * np.transpose(self.B)
 
-            if arfitness[0] >= self.stopfitness or (np.max(self.D) > (1e7 * np.min(self.D))):
+            if arfitness[0] <= self.stopfitness or (np.max(self.D) > (1e7 * np.min(self.D))):
                 print(np.max(self.D) > 1e7 * np.min(self.D))
                 print(arfitness[0] <= self.stopfitness)
                 break
 
-            if countEval % 100 == 0:
-                print("current generation")
-                print(self.evaluationFunction(arx[:, arindex[0]]))
-                print(arfitness[0])
-                print(arx[:, arindex[0]])
-
+            if verbose:
+                print(f'At iteration count{countEval/self.lambd} best objective is {arfitness[0]}')
+                # print(f'Theta value is {arx[:, arindex[0]]}')
                 sys.stdout.flush()
-            prevBest = best
-            best = self.evaluationFunction(arx[:, arindex[0]])
-            if abs(prevBest - best) < 1e-10:
-                break
+            # prevBest = best
+            # best = arfitness[0]
+            # if abs(prevBest - best) < 1e-10:
+            #     break
 
         xmin = arx[:, arindex[0]]
         return xmin
 
 
-def func(x):
-    f = 4 - np.dot(x, x)
-    return f
+
+
 
 
 def main():
-    # theta = np.zeros((16 * 3))
-
-    # sigma = 0.5
-    #
-    # popSize = 10
-    # numElite = 5
-    # numEpisodes = 100
-    # evaluationFunction = CandidateMountaincar
-    # evaluationFunction = CandidateCartpole
-    # cem = CEM(theta, sigma, popSize, numElite, numEpisodes, evaluationFunction)
-    #
-    # for _ in range(1000):
-    #     cem.train()
-
-
-
-
     episodes = int(sys.argv[1])
     for _ in range(10):
         theta = np.zeros((256 * 2))
         evaluationFunction = CandidateCartpolePDIS
         cmaes = CMAES(theta, evaluationFunction)
         # print(evaluationFunction(cmaes.generation_loop()))
-        x_min = cmaes.generation_loop(episodes)
+        x_min = cmaes.run_optimizer(episodes)
 
-            # if it % 100 == 0:
-            #     print("episodes", episodes)
-            #     # print("x_min:=", x_min)
-            #     print("f_min:=", CandidateCartpolePDIS(x_min, episodes, multiplier=1))
-            #     sys.stdout.flush()
+        # if it % 100 == 0:
+        #     print("episodes", episodes)
+        #     # print("x_min:=", x_min)
+        #     print("f_min:=", CandidateCartpolePDIS(x_min, episodes, multiplier=1))
+        #     sys.stdout.flush()
         print("--------------------------")
         print("x_min:=", x_min)
         print("f_min:=", evaluationFunction(x_min, episodes, multiplier=1))
         sys.stdout.flush()
 
 
+def another():
+    episodes = int(sys.argv[1])
+    for _ in range(10):
+        theta = np.zeros((16 * 3))
+        evaluationFunction = CandidateMountaincarPDIS
+        cmaes = CMAES(theta, evaluationFunction)
+        # print(evaluationFunction(cmaes.generation_loop()))
+        x_min = cmaes.run_optimizer(episodes)
+
+        # if it % 100 == 0:
+        #     print("episodes", episodes)
+        #     # print("x_min:=", x_min)
+        #     print("f_min:=", CandidateCartpolePDIS(x_min, episodes, multiplier=1))
+        #     sys.stdout.flush()
+        print("--------------------------")
+        print("x_min:=", x_min)
+        print("f_min:=", evaluationFunction(x_min, episodes, multiplier=1))
+        sys.stdout.flush()
+
+
+def func(x):
+    f = 4 + np.dot(x, x)
+    return f
+
+
+def test():
+    cem = CMAES(np.array([10,20]), func)
+    cem.run_optimizer()
+
+
 if __name__ == "__main__":
-    main()
+    test()

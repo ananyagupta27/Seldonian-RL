@@ -18,7 +18,7 @@ def fourierBasis(state, order_list):
     state_new = np.array(state).reshape(1, -1)
     scalars = np.einsum('ij, kj->ik', order_list,
                         state_new)  # do a row by row dot product with the state. i = length of order list, j = state dimensions, k = 1
-    phi = np.cos(np.pi * scalars)
+    phi = np.cos(3.14 * scalars)
     return phi
 
 

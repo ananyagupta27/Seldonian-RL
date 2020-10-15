@@ -71,7 +71,7 @@ class Gridworld(object):
     def get_state(self):
         x = np.zeros(self.nums, dtype=np.float32)
         x[self.x * self.size + self.y] = 1
-        return self.x * self.size + self.y
+        return x
 
     def terminal(self):
         return (self.x == self.size - 1 and self.y == self.size - 1) or (self.count > 500)

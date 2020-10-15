@@ -22,12 +22,13 @@ class Cartpole(Environment):
 
     def __init__(self):
         self._name = "Cartpole"
+        self.numActions = 2
         self._action = None
         self._reward = 0
         self._isEnd = False
 
         self._gamma = 1.0
-        ranges = np.zeros((4,2))
+        ranges = np.zeros((4, 2))
         ranges[0, :] = [-3, 3]
         ranges[1, :] = [-10., 10.]
         ranges[2, :] = [-np.pi / 12, np.pi / 12]
@@ -60,6 +61,12 @@ class Cartpole(Environment):
     def gamma(self) -> float:
         return self._gamma
 
+    def getNumActions(self):
+        return self.numActions
+
+    def getStateDims(self):
+        return self.state.shape[0]
+
     def nextState(self, state: np.ndarray, action: int) -> np.ndarray:
         """
         Compute the next state of the pendulum using the euler approximation to the dynamics
@@ -78,14 +85,19 @@ class Cartpole(Environment):
 
         dv = (F + self._mp * self._l * (dtheta ** 2 * sinth - ddtheta * costh)) / mass
 
-
         # update by adding the derivatives (euler forward)
         theta += h * dtheta
         dtheta += h * ddtheta
         x += h * v
         v += h * dv
+        state = np.array([x, v, theta, dtheta])
+        for i, item in enumerate(state):
+            if state[i] < self.observation_space.low[i]:
+                state[i] = self.observation_space.low[i]
+            elif state[i] > self.observation_space.high[i]:
+                state[i] = self.observation_space.high[i]
 
-        return np.array([x, v, theta, dtheta])
+        return state
 
     def R(self, state: np.ndarray, action: int, next_state: np.ndarray) -> float:
         """
