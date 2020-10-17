@@ -32,9 +32,9 @@ class QSA:
         self.safetyDataSize = episodes
 
         datasetGenerator = Dataset(episodes, env)
-        theta = np.zeros((env.getStateDims() ** fourierBasisOrder, env.getNumActions()))
+        theta = np.zeros((env.getStateDims(), env.getNumActions()))
         self.candidateDataset = datasetGenerator.generate_dataset(theta)
-        theta = np.zeros((env.getStateDims() ** fourierBasisOrder, env.getNumActions()))
+        theta = np.zeros((env.getStateDims(), env.getNumActions()))
         self.safetyDataset = datasetGenerator.generate_dataset(theta)
         # print(self.safetyDataset['states'])
 
@@ -94,8 +94,9 @@ class QSA:
         :param safetyDataSize: size of the safety dataset
         :return: candidate solution
         """
-        theta = np.zeros((256 * 2))
-        optimizer = Powell(theta, self.candidateObjective)
+        # theta = np.zeros((256 * 2))
+        theta = np.zeros((self.env.getStateDims() * self.env.getNumActions()))
+        optimizer = CEM(theta, self.candidateObjective)
         xMin = optimizer.run_optimizer()
         return xMin
 
@@ -154,7 +155,14 @@ class QSA:
 
 
 def gHatCartpole(estimates):
-    return 20 - estimates
+    return 10 - estimates
+
+
+def gHat1Gridworld(estimates):
+    return -75-estimates
+
+def gHat2Gridworld(estimates):
+    return estimates + 1
 
 
 def gHatMountaincar(estimates):
@@ -168,7 +176,7 @@ def testCartpole():
 
     # Create the behavioral constraints - each is a gHat function and a confidence level delta
     gHats = [gHatCartpole]
-    deltas = [0.1, 0.1]
+    deltas = [0.1]
     fHat = PDIS
 
     qsa = QSA(env, episodes, fHat, gHats, deltas)  # Run the Quasi-Seldonian algorithm
@@ -188,16 +196,68 @@ def testCartpole():
     # Return the result and success flag
     return [candidateSolution, passedSafety]
 
-    # return result, found
-
 
 def testMountaincar():
-    pass
+    env = Mountaincar()
+    # np.random.seed(0)  # Create the random number generator to use, with seed zero
+    episodes = 10
+
+    # Create the behavioral constraints - each is a gHat function and a confidence level delta
+    gHats = [gHatMountaincar]
+    deltas = [0.1]
+    fHat = PDIS
+
+    qsa = QSA(env, episodes, fHat, gHats, deltas)  # Run the Quasi-Seldonian algorithm
+
+    # Get the candidate solution
+    candidateSolution = qsa.getCandidateSolution()
+
+    # Run the safety test
+    passedSafety = qsa.safetyTest(candidateSolution)
+
+    if passedSafety:
+        print("A solution was found: ", candidateSolution)
+        print("fHat of solution (computed over all data, D):",
+              fHat(candidateSolution, qsa.getTotalDataset(), episodes, env))
+    else:
+        print("No solution found")
+
+    # Return the result and success flag
+    return [candidateSolution, passedSafety]
+
+
+def testGridworld():
+    env = Gridworld()
+    # np.random.seed(0)  # Create the random number generator to use, with seed zero
+    episodes = 10
+
+    # Create the behavioral constraints - each is a gHat function and a confidence level delta
+    gHats = [gHat1Gridworld, gHat2Gridworld]
+    deltas = [0.1, 0.1]
+    fHat = PDIS
+
+    qsa = QSA(env, episodes, fHat, gHats, deltas)  # Run the Quasi-Seldonian algorithm
+
+    # Get the candidate solution
+    candidateSolution = qsa.getCandidateSolution()
+
+    # Run the safety test
+    passedSafety = qsa.safetyTest(candidateSolution)
+
+    if passedSafety:
+        print("A solution was found: ", candidateSolution)
+        print("fHat of solution (computed over all data, D):",
+              fHat(candidateSolution, qsa.getTotalDataset(), episodes, env))
+    else:
+        print("No solution found")
+
+    # Return the result and success flag
+    return [candidateSolution, passedSafety]
 
 
 def main():
-    # testMountaincar()
-    testCartpole()
+    testMountaincar()
+    # testGridworld()
 
 
 if __name__ == "__main__":

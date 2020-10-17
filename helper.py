@@ -2,6 +2,14 @@ import numpy as np
 import itertools
 from scipy.stats import t
 import math
+import sys
+import os
+
+sys.path.insert(1, os.path.join(os.path.dirname(sys.path[0]), 'environments'))
+sys.path.insert(1, os.path.join(os.path.dirname(sys.path[0]), 'optimizers'))
+
+from environments.gridworld import Gridworld
+from environments.cartpole import Cartpole
 
 
 # This function returns the inverse of Student's t CDF using the degrees of freedom in nu for the corresponding
@@ -42,23 +50,23 @@ def predictTTestUpperBound(v, delta, k):
     return res
 
 
-# returns count lists in base order
-def getCountlist(number_of_states, order):
-    count_list = []
-    for i in itertools.product(np.arange(0, order + 1), repeat=(number_of_states)):
-        count_list.append(np.array(i))
-    return np.array(count_list)
+def getCountlist(number_of_states , order):
+    arr = []
+    for i in itertools.product(np.arange(0,order + 1),repeat=(number_of_states)):
+        arr.append(np.array(i))
+    return np.array(arr)
 
 
 def fourierBasis(state, order_list):
-    state_new = np.array(state).reshape(1, -1)
-    scalars = np.einsum('ij, kj->ik', order_list,state_new)
-    phi = np.cos(np.pi * scalars)
+    state_new = np.array(state).reshape(1,-1)
+    scalars = np.einsum('ij, kj->ik', order_list, state_new)
+    phi = np.cos(np.pi*scalars)
     return phi
 
 
 def get_transformed_state(env, state, theta, order=3):
-
+    if type(env) is Gridworld:
+        return state.reshape(-1,1)
     state_copy = state.copy()
     for i, item in enumerate(env.observation_space.low):
         try:
@@ -82,3 +90,11 @@ def get_action(actPr):
         if temp <= sum_pr:
             return i
     return actions - 1
+
+
+def test():
+    get_transformed_state(Cartpole(), np.array([1,2,3,4]), np.zeros((256,2)))
+
+
+if __name__ == "__main__":
+    test()

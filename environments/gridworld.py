@@ -4,10 +4,10 @@ import numpy as np
 
 from gym import spaces
 import copy
+from .environment import Environment
 
 
-
-class Gridworld(object):
+class Gridworld(Environment):
     def __init__(self, size=5, gamma=1):
         self.size = int(size)
         self.x = int(0)
@@ -21,6 +21,7 @@ class Gridworld(object):
         self._P = None
         self._R = None
         self._gamma = gamma
+        self.numActions = 4
 
     @property
     def gamma(self) -> float:
@@ -33,6 +34,13 @@ class Gridworld(object):
     @property
     def state(self) -> np.ndarray:
         return np.array([self.get_state()])
+
+
+    def getNumActions(self):
+        return self.numActions
+
+    def getStateDims(self):
+        return self.state.shape[1]
 
     def reset(self):
         self.x = 0
@@ -68,6 +76,11 @@ class Gridworld(object):
 
         return self.get_state(), reward, self.terminal()
 
+
+    def nextState(self, state, action):
+        s,_,_ = self.step(action)
+        return s
+
     def get_state(self):
         x = np.zeros(self.nums, dtype=np.float32)
         x[self.x * self.size + self.y] = 1
@@ -77,3 +90,5 @@ class Gridworld(object):
         return (self.x == self.size - 1 and self.y == self.size - 1) or (self.count > 500)
 
 
+    def R(self, state, action, nextState):
+        return -1

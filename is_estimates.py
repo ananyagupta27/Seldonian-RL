@@ -5,7 +5,7 @@ from helper import *
 
 
 def IS(theta, dataset, episodes, env):
-    theta = theta.reshape(256, 2)
+    theta = theta.reshape(env.getStateDims(), env.getNumActions())
     states = dataset['states']
     actions = dataset['actions']
     rewards = dataset['rewards']
@@ -42,7 +42,7 @@ def IS(theta, dataset, episodes, env):
 
 
 def PDIS(theta, dataset, episodes, env):
-    theta = theta.reshape(256, 2)
+    theta = theta.reshape(env.getStateDims(), env.getNumActions())
     states = dataset['states']
     actions = dataset['actions']
     rewards = dataset['rewards']
@@ -50,6 +50,8 @@ def PDIS(theta, dataset, episodes, env):
 
     is_estimates = []
     average_estimate = 0
+
+
     for episode in range(episodes):
 
         G_h_l = 0
@@ -70,10 +72,11 @@ def PDIS(theta, dataset, episodes, env):
             num *= pi_e[0][a]
             den *= pi_b_cur[0][a]
 
-            is_current += (env.gamma**timestep) * rewards[episode][timestep] * num / den
+            is_current += (env.gamma**timestep) * (rewards[episode][timestep] * (num / den))
 
         is_estimates.append(is_current)
     average_estimate = np.mean(is_estimates)
+    print(average_estimate)
     return average_estimate, np.array(is_estimates)
 
 

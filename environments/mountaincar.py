@@ -59,13 +59,13 @@ class Mountaincar(Environment):
         return self.numActions
 
     def getStateDims(self):
-        return self.state.shape[0]
+        return 16
 
     def nextState(self, state: np.ndarray, action: int) -> np.ndarray:
         """
         Compute the next state of the pendulum using the euler approximation to the dynamics
         """
-        u = float(action - 2)
+        u = float(action - 1)
         x, v = state
         v += self._ucoef * u - self._g * np.cos(self._h * x)
         v = np.clip(v, self.observation_space.low[1], self.observation_space.high[1])

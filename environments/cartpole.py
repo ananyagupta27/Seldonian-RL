@@ -65,7 +65,7 @@ class Cartpole(Environment):
         return self.numActions
 
     def getStateDims(self):
-        return self.state.shape[0]
+        return 256
 
     def nextState(self, state: np.ndarray, action: int) -> np.ndarray:
         """
