@@ -155,19 +155,21 @@ class QSA:
 
 
 def gHatCartpole(estimates):
-    return 10 - estimates
+    # return 170 - estimates
+    return 185 - estimates
 
 
 def gHat1Gridworld(estimates):
-    return -75-estimates
+    # return -130 - estimates
+    return -110 - estimates
 
 def gHat2Gridworld(estimates):
     return estimates + 1
 
 
 def gHatMountaincar(estimates):
-    return -4000 - estimates
-
+    # return -830 - estimates
+    return -760 - estimates
 
 def testCartpole():
     env = Cartpole()
