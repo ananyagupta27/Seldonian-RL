@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 set -exu
+ENV=$1
+EPISODES=$2
 
-EPISODES=$1
-
-python optimizers/cem.py $EPISODES
+python main.py $ENV $EPISODES

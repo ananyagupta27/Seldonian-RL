@@ -12,17 +12,19 @@ log_dir=logs/fair_ranking/${TIME}
 mkdir -p $log_dir
 
 
-
-for EPISODES in 2 10 100 500 1000 5000 10000 100000
+for ENV in 0 1 2
 do
-    sbatch -J fairness \
-              -e $log_dir/gridworld_${EPISODES}.err \
-              -o $log_dir/gridworld_${EPISODES}.log \
-              --mem=10000 \
-              --partition=defq \
-              --nodes=1 \
-              --ntasks=1 \
-              --time=0-11:00:00 \
-              bin/starter.sh $EPISODES
+  for EPISODES in 2 10 100 500 1000 5000 10000 100000
+  do
+      sbatch -J safety \
+                -e $log_dir/${ENV}${EPISODES}.err \
+                -o $log_dir/${ENV}${EPISODES}.log \
+                --mem=10000 \
+                --partition=defq \
+                --nodes=1 \
+                --ntasks=1 \
+                --time=0-11:00:00 \
+                bin/starter.sh $ENV $EPISODES
 
+  done
 done
