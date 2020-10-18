@@ -27,7 +27,7 @@ class CEM(Optimizer):
         self.numElite = numElite
         self.epsilon = epsilon
         self.evaluationFunction = evaluationFunction
-        self.iterations = 1000
+        self.iterations = 200
 
 
     def name(self):
@@ -58,7 +58,7 @@ class CEM(Optimizer):
                     self.epsilon + self.numElite)
 
             #
-            if iter_count % 50 == 0 and verbose:
+            if iter_count % 10 == 0 and verbose:
                 print(f'At iteration count{iter_count} best objective is {J_values[0]}')
                 # print(f'Theta value is {theta_values[0]}')
                 sys.stdout.flush()

@@ -4,8 +4,8 @@ from scipy.optimize import minimize
 from scipy.stats import t
 import sys
 import os
-import ray                  # To allow us to execute experiments in parallel
-ray.init()
+# import ray                  # To allow us to execute experiments in parallel
+# ray.init()
 sys.path.insert(1, os.path.join(os.path.dirname(sys.path[0]), 'environments'))
 sys.path.insert(1, os.path.join(os.path.dirname(sys.path[0]), 'optimizers'))
 
@@ -186,7 +186,7 @@ def gHat2Mountaincar(estimates):
     # return -830 - estimates
     return estimates + 1
 
-@ray.remote
+# @ray.remote
 def testCartpole(ms, numM, numTrials):
     for trial in range(numTrials):
         for m in [param2]:
@@ -216,7 +216,7 @@ def testCartpole(ms, numM, numTrials):
     # Return the result and success flag
     return [candidateSolution, passedSafety]
 
-@ray.remote
+# @ray.remote
 def testMountaincar(ms, numM, numTrials):
     for trial in range(numTrials):
         for m in [param2]:
@@ -247,7 +247,7 @@ def testMountaincar(ms, numM, numTrials):
     # Return the result and success flag
     return [candidateSolution, passedSafety]
 
-@ray.remote
+# @ray.remote
 def testGridworld(ms, numM, numTrials):
     for trial in range(numTrials):
         for m in [param2]:
@@ -292,12 +292,14 @@ def main():
     else:
         func = testCartpole
 
-    nWorkers = 16
+    nWorkers = 5
     ms = [2 ** i for i in range(5, 10)]
     numM = len(ms)
     numTrials = 10
-    _ = ray.get([func.remote(ms, numM, numTrials) for worker_id in
-                 range(1, nWorkers + 1)])
+    # _ = ray.get([func.remote(ms, numM, numTrials) for worker_id in
+    #              range(1, nWorkers + 1)])
+
+    func(ms, numM, numTrials)
 
 if __name__ == "__main__":
     main()
