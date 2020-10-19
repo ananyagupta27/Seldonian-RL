@@ -11,7 +11,7 @@ TIME=`(date +%Y-%m-%d-%H-%M-%S)`
 log_dir=logs/realenv/${TIME}
 mkdir -p $log_dir
 
-for TRIAL in 1 2 3 4 5 6
+for TRIAL in 1 2 3 4 5 6 7
 do
   for ENV in 2 0
   do
@@ -25,7 +25,7 @@ do
                   --nodes=1 \
                   --ntasks=1 \
                   --time=0-11:00:00 \
-                  bin/starter.sh $ENV $EPISODES
+                  bin/starter.sh $ENV $EPISODES $TRIAL
 
     done
   done

@@ -23,6 +23,7 @@ from create_dataset import Dataset
 # print(int(sys.argv[1]), int(sys.argv[2]))
 param1 = int(sys.argv[1])
 param2 = int(sys.argv[2])
+trial = int(sys.argv[3])
 
 
 class QSA:
@@ -88,6 +89,8 @@ class QSA:
         print("result=",-result,"fhat=",resf, "upperboudn", upperBound)
         if self.feval%50 == 0:
             print("theta eval =", thetaToEvaluate)
+            filename = param1+'_'+param2+'_'+trial
+            np.save(filename,thetaToEvaluate)
         return -result
 
     def getCandidateSolution(self):

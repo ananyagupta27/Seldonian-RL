@@ -3,5 +3,5 @@
 set -exu
 ENV=$1
 EPISODES=$2
-
-python main.py $ENV $EPISODES
+TRIAL=$3
+python main.py $ENV $EPISODES $TRIAL
