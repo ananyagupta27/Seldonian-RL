@@ -86,11 +86,12 @@ class QSA:
                 result = result - upperBound
 
         # Negative because our optimizer (Powell) is a minimizer, but we want to maximize the candidate objective
-        print("result=",-result,"fhat=",resf, "upperboudn", upperBound)
+    #    print("result=",-result,"fhat=",resf, "upperboudn", upperBound)
         if self.feval%50 == 0:
             print("theta eval =", thetaToEvaluate)
-            filename = param1+'_'+param2+'_'+trial
+            filename = str(param1)+'_'+str(param2)+'_'+str(trial)
             np.save(filename,thetaToEvaluate)
+            print("result=",-result,"fhat=",resf, "upperboudn", upperBound)
         return -result
 
     def getCandidateSolution(self):

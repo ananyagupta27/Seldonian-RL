@@ -8,18 +8,18 @@ export OMP_NUM_THREADS=$NUM_THREADS
 
 TIME=`(date +%Y-%m-%d-%H-%M-%S)`
 
-log_dir=logs/realenv/${TIME}
+log_dir=logs/cartpole/${TIME}
 mkdir -p $log_dir
 
 for TRIAL in 1 2 3 4 5 6 7
 do
-  for ENV in 2 0
+  for ENV in 2
   do
     for EPISODES in 5 10 100 500 1000 5000 10000
     do
         sbatch -J safety \
-                  -e $log_dir/${ENV}${EPISODES}_${TRIAL}.err \
-                  -o $log_dir/${ENV}${EPISODES}_${TRIAL}.log \
+                  -e $log_dir/cp${ENV}_${EPISODES}_${TRIAL}.err \
+                  -o $log_dir/cp${ENV}_${EPISODES}_${TRIAL}.log \
                   --mem=10000 \
                   --partition=defq \
                   --nodes=1 \
