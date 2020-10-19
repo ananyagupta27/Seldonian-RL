@@ -19,6 +19,8 @@ class Powell(Optimizer):
         self.name = "Powell"
         self.theta = theta
         self.evaluationFunction = evaluationFunction
+        print(self.name)
+
 
     def name(self):
         return self.name

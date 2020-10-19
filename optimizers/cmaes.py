@@ -21,9 +21,13 @@ class CMAES(Optimizer):
         self.N = theta.shape[0]
         self.xmean = np.random.uniform(0, 1, self.N).reshape(-1, 1)
         self.sigma = 0.3
+        self.sigma = 0.6
         self.stopfitness = 1e-10
+        self.stopfitness = 1e-5
         self.stopeval = 50 * self.N ** 2
+        self.stopeval = 50 * self.N
         self.lambd = int(4 + np.floor(3 * np.log(self.N)))
+        self.lambd = 50
         self.mu = self.lambd / 2
         self.weights = np.log(self.mu + 1 / 2) - (np.log(range(1, int(self.mu) + 1))).reshape(-1, 1)
         self.mu = int(np.floor(self.mu))
@@ -42,6 +46,8 @@ class CMAES(Optimizer):
         self.invsqrtC = self.B * np.diag(np.transpose(np.power(self.D, -1))[0]) * np.transpose(self.B)
         self.eigenval = 0
         self.chiN = self.N ** 0.5 * (1 - 1 / (4 * self.N) + 1 / (21 * self.N ^ 2))
+        print(self.name)
+
 
 
     def name(self):

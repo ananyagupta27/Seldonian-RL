@@ -130,7 +130,7 @@ def total_return(theta, dataset, episodes, env):
 
 
 def test():
-    env = Gridworld()
+    env = Mountaincar()
     datasetGenerator = Dataset(100, env)
     theta = np.zeros((env.getStateDims(), env.getNumActions()))
     dataset = datasetGenerator.generate_dataset(theta)

@@ -1,5 +1,5 @@
 import numpy as np
-
+from multiprocessing import Pool
 from typing import Callable
 
 from scipy.stats import t
@@ -15,9 +15,10 @@ from .optimizer import Optimizer
 class CEM(Optimizer):
 
     def __init__(self, theta, evaluationFunction):
-        sigma = 0.5
-        popSize = 10
-        numElite = 5
+        sigma = 2
+
+        popSize = 20
+        numElite = int(0.10*popSize)
         epsilon = 0.0001
 
         self.name = "Cem"
@@ -27,7 +28,8 @@ class CEM(Optimizer):
         self.numElite = numElite
         self.epsilon = epsilon
         self.evaluationFunction = evaluationFunction
-        self.iterations = 200
+        self.iterations = 500
+        print(self.name)
 
 
     def name(self):
@@ -39,10 +41,19 @@ class CEM(Optimizer):
     def run_optimizer(self, verbose=True) -> np.ndarray:
         for iter_count in range(self.iterations):
             values = []
+            thetas_to_try = []
             for k in range(1, self.popSize + 1, 1):
                 theta_k = np.random.multivariate_normal(self.theta.flatten(), self.Sigma)
-                J_dash = self.evaluationFunction(theta_k)
-                values.append((theta_k, J_dash))
+                # multiprocessing use
+                thetas_to_try.append(theta_k)
+
+            with Pool(8) as p:
+                J_dash_list=(p.map(self.evaluationFunction, thetas_to_try))
+
+            values = [(thetas_to_try[i], J_dash_list[i]) for i in range(0, len(thetas_to_try))]
+
+            #     # J_dash = self.evaluationFunction(theta_k)
+            # values.append((theta_k, J_dash))
             sorted_values = sorted(values, key=lambda second: second[1])
             theta_values = np.asarray([i[0] for i in sorted_values])[0: self.numElite]
             J_values = np.asarray([i[1] for i in sorted_values])[0: self.numElite]
@@ -58,9 +69,9 @@ class CEM(Optimizer):
                     self.epsilon + self.numElite)
 
             #
-            if iter_count % 10 == 0 and verbose:
+            if iter_count % 50 == 0 and verbose:
                 print(f'At iteration count{iter_count} best objective is {J_values[0]}')
-                # print(f'Theta value is {theta_values[0]}')
+                print(f'Theta Best value is {theta_values[0]}')
                 sys.stdout.flush()
 
         return theta_values[0]

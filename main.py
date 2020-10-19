@@ -34,12 +34,13 @@ class QSA:
         self.gHats = gHats
         self.deltas = deltas
         fourierBasisOrder = 4
-        self.safetyDataSize = episodes
+        self.safetyDataSize = episodes*2
 
         datasetGenerator = Dataset(episodes, env)
         theta = np.zeros((env.getStateDims(), env.getNumActions()))
         self.candidateDataset = datasetGenerator.generate_dataset(theta)
         theta = np.zeros((env.getStateDims(), env.getNumActions()))
+        datasetGenerator = Dataset(episodes*2, env)
         self.safetyDataset = datasetGenerator.generate_dataset(theta)
         # print((self.candidateDataset['rewards'][0]))
 
@@ -63,7 +64,6 @@ class QSA:
 
             # This is a vector of unbiased estimates of g_i(thetaToEvaluate)
             g_samples = g(estimates)
-            # print(g_samples)
             # Get the conservative prediction of what the upper bound on g_i(thetaToEvaluate) will be in the safety test
             upperBound = predictTTestUpperBound(g_samples, delta, self.safetyDataSize)
 
@@ -83,7 +83,7 @@ class QSA:
                 result = result - upperBound
 
         # Negative because our optimizer (Powell) is a minimizer, but we want to maximize the candidate objective
-        # print("result=",-result,"fhat=",resf, "upperboudn", upperBound)
+        print("result=",-result,"fhat=",resf, "upperboudn", upperBound)
         return -result
 
     def getCandidateSolution(self):
@@ -163,7 +163,7 @@ class QSA:
 
 def gHatCartpole(estimates):
     # return 100 - estimates
-    return 170 - estimates
+    return 100 - estimates
     # return 185 - estimates
 
 
@@ -178,8 +178,8 @@ def gHat2Gridworld(estimates):
 
 def gHat1Mountaincar(estimates):
     # return 100 - estimates
-    return -830 - estimates
-    # return -760 - estimates
+    # return 150 - estimates
+    return -760 - estimates
 
 
 def gHat2Mountaincar(estimates):
@@ -299,7 +299,50 @@ def main():
     # _ = ray.get([func.remote(ms, numM, numTrials) for worker_id in
     #              range(1, nWorkers + 1)])
 
-    func(ms, numM, numTrials)
+    func(ms, numM, 1)
+
+
+def test():
+    m=10
+    env = Cartpole()
+    # np.random.seed(0)  # Create the random number generator to use, with seed zero
+    episodes = m
+    print("m=", m, "Number of episodes =", episodes)
+    # Create the behavioral constraints - each is a gHat function and a confidence level delta
+    gHats = [gHatCartpole]
+    deltas = [0.1]
+    fHat = PDIS
+
+    qsa = QSA(env, episodes, fHat, gHats, deltas)
+    qsa.safetyTest(np.array([ 0.0848445,   0.00252633,  0.11145617, -0.00250615,  0.00050902,  0,
+  0,         0,         0,         0,         0,         0.,
+  0,         0,         0,         0,         0,         0.,
+  0,         0,         0,         0,         0,         0.,
+  0,         0,         0,         0,         0,         0.,
+  0,         0,         0,         0,         0,         0.,
+  0,         0,         0,         0,         0,         0.,
+  0,         0,         0,         0,         0,         0.,
+  0,         0,         0,         0,         0,         0.,
+  0,         0,         0,         0,         0,         0.,
+  0,         0,         0,         0,         0,         0.,
+  0,         0,         0,         0,         0,         0.,
+  0,         0,         0,         0,         0,         0.,
+  0,         0,         0,         0,         0,         0.,
+  0,         0,         0,         0,         0,         0.,
+  0,         0,         0,         0,         0,         0.,
+  0,         0,         0,         0,         0,         0.,
+  0,         0,         0,         0,         0,         0.,
+  0,         0,         0,         0,         0,         0.,
+  0,         0,         0,         0,         0,         0.,
+  0,         0,         0,         0,         0,         0.,
+  0,         0,         0,         0,         0,         0.,
+  0,         0,         0,         0,         0,         0.,
+  0,         0,         0,         0,         0,         0.,
+  0,         0,         0,         0,         0,         0,
+  0,         0,         0,         0,         0,         0,
+  0,         0,         0,         0,         0,         0      ]
+))
 
 if __name__ == "__main__":
+    # test()
     main()

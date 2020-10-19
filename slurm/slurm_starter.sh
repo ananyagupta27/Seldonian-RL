@@ -11,20 +11,22 @@ TIME=`(date +%Y-%m-%d-%H-%M-%S)`
 log_dir=logs/fair_ranking/${TIME}
 mkdir -p $log_dir
 
-
-for ENV in 0 1 2
+for TRIAL in 1 2 3 4 5
 do
-  for EPISODES in 2 10 100 500 1000 5000 10000 100000
+  for ENV in 2
   do
-      sbatch -J safety \
-                -e $log_dir/${ENV}${EPISODES}.err \
-                -o $log_dir/${ENV}${EPISODES}.log \
-                --mem=10000 \
-                --partition=defq \
-                --nodes=1 \
-                --ntasks=1 \
-                --time=0-11:00:00 \
-                bin/starter.sh $ENV $EPISODES
+    for EPISODES in 5 10 100 500 1000 5000 10000
+    do
+        sbatch -J safety \
+                  -e $log_dir/${ENV}${EPISODES}_${TRIAL}.err \
+                  -o $log_dir/${ENV}${EPISODES}_${TRIAL}.log \
+                  --mem=10000 \
+                  --partition=defq \
+                  --nodes=1 \
+                  --ntasks=1 \
+                  --time=0-11:00:00 \
+                  bin/starter.sh $ENV $EPISODES
 
+    done
   done
 done
