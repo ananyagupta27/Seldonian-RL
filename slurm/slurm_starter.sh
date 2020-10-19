@@ -8,12 +8,12 @@ export OMP_NUM_THREADS=$NUM_THREADS
 
 TIME=`(date +%Y-%m-%d-%H-%M-%S)`
 
-log_dir=logs/fair_ranking/${TIME}
+log_dir=logs/realenv/${TIME}
 mkdir -p $log_dir
 
-for TRIAL in 1 2 3 4 5
+for TRIAL in 1 2 3 4 5 6
 do
-  for ENV in 2
+  for ENV in 2 0
   do
     for EPISODES in 5 10 100 500 1000 5000 10000
     do

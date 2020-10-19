@@ -42,6 +42,7 @@ class QSA:
         theta = np.zeros((env.getStateDims(), env.getNumActions()))
         datasetGenerator = Dataset(episodes*2, env)
         self.safetyDataset = datasetGenerator.generate_dataset(theta)
+        self.feval = 0
         # print((self.candidateDataset['rewards'][0]))
 
     # , candidateDataset, fHat, gHats, deltas, safetyDataSize
@@ -54,6 +55,7 @@ class QSA:
         :param thetaToEvaluate:
         :return: result
         """
+        self.feval = self.feval + 1
         # importance sampling estimate
         result, estimates = self.fHat(thetaToEvaluate, self.candidateDataset, self.episodes, self.env)
         resf = result
@@ -84,6 +86,8 @@ class QSA:
 
         # Negative because our optimizer (Powell) is a minimizer, but we want to maximize the candidate objective
         print("result=",-result,"fhat=",resf, "upperboudn", upperBound)
+        if self.feval%50 == 0:
+            print("theta eval =", thetaToEvaluate)
         return -result
 
     def getCandidateSolution(self):
@@ -102,7 +106,7 @@ class QSA:
         """
         # theta = np.zeros((256 * 2))
         theta = np.zeros((self.env.getStateDims() * self.env.getNumActions()))
-        optimizer = CEM(theta, self.candidateObjective)
+        optimizer = Powell(theta, self.candidateObjective)
         xMin = optimizer.run_optimizer()
         return xMin
 
@@ -163,7 +167,7 @@ class QSA:
 
 def gHatCartpole(estimates):
     # return 100 - estimates
-    return 100 - estimates
+    return 170 - estimates
     # return 185 - estimates
 
 
@@ -179,7 +183,7 @@ def gHat2Gridworld(estimates):
 def gHat1Mountaincar(estimates):
     # return 100 - estimates
     # return 150 - estimates
-    return -760 - estimates
+    return 150 - estimates
 
 
 def gHat2Mountaincar(estimates):
@@ -303,8 +307,8 @@ def main():
 
 
 def test():
-    m=10
-    env = Cartpole()
+    m=100
+    env = Mountaincar()
     # np.random.seed(0)  # Create the random number generator to use, with seed zero
     episodes = m
     print("m=", m, "Number of episodes =", episodes)
@@ -314,34 +318,8 @@ def test():
     fHat = PDIS
 
     qsa = QSA(env, episodes, fHat, gHats, deltas)
-    qsa.safetyTest(np.array([ 0.0848445,   0.00252633,  0.11145617, -0.00250615,  0.00050902,  0,
-  0,         0,         0,         0,         0,         0.,
-  0,         0,         0,         0,         0,         0.,
-  0,         0,         0,         0,         0,         0.,
-  0,         0,         0,         0,         0,         0.,
-  0,         0,         0,         0,         0,         0.,
-  0,         0,         0,         0,         0,         0.,
-  0,         0,         0,         0,         0,         0.,
-  0,         0,         0,         0,         0,         0.,
-  0,         0,         0,         0,         0,         0.,
-  0,         0,         0,         0,         0,         0.,
-  0,         0,         0,         0,         0,         0.,
-  0,         0,         0,         0,         0,         0.,
-  0,         0,         0,         0,         0,         0.,
-  0,         0,         0,         0,         0,         0.,
-  0,         0,         0,         0,         0,         0.,
-  0,         0,         0,         0,         0,         0.,
-  0,         0,         0,         0,         0,         0.,
-  0,         0,         0,         0,         0,         0.,
-  0,         0,         0,         0,         0,         0.,
-  0,         0,         0,         0,         0,         0.,
-  0,         0,         0,         0,         0,         0.,
-  0,         0,         0,         0,         0,         0.,
-  0,         0,         0,         0,         0,         0.,
-  0,         0,         0,         0,         0,         0,
-  0,         0,         0,         0,         0,         0,
-  0,         0,         0,         0,         0,         0      ]
-))
+    qsa.safetyTest(np.array([ 0]))
+
 
 if __name__ == "__main__":
     # test()
