@@ -8,7 +8,7 @@ from .environment import Environment
 
 
 class Gridworld(Environment):
-    def __init__(self, size=5, gamma=1):
+    def __init__(self, size=4, gamma=1):
         self.size = int(size)
         self.x = int(0)
         self.y = int(0)
@@ -34,6 +34,13 @@ class Gridworld(Environment):
     @property
     def state(self) -> np.ndarray:
         return np.array([self.get_state()])
+
+    @property
+    def threshold(self):
+        """
+        The threshold performance
+        """
+        return 70
 
 
     def getNumActions(self):
@@ -72,7 +79,7 @@ class Gridworld(Environment):
         reward = -1.0
 
         if self.terminal():
-            reward = 0
+            reward = 200
 
         return self.get_state(), reward, self.terminal()
 

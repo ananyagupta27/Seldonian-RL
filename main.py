@@ -2,10 +2,12 @@ import numpy as np
 import numpy as np
 from scipy.optimize import minimize
 from scipy.stats import t
+import timeit
 import sys
 import os
-# import ray                  # To allow us to execute experiments in parallel
-# ray.init()
+import ray  # To allow us to execute experiments in parallel
+
+ray.init()
 sys.path.insert(1, os.path.join(os.path.dirname(sys.path[0]), 'environments'))
 sys.path.insert(1, os.path.join(os.path.dirname(sys.path[0]), 'optimizers'))
 
@@ -19,11 +21,11 @@ from optimizers.cmaes import CMAES
 from helper import *
 from is_estimates import *
 from create_dataset import Dataset
+from gHats import *
 
-# print(int(sys.argv[1]), int(sys.argv[2]))
 param1 = int(sys.argv[1])
-param2 = int(sys.argv[2])
-trial = int(sys.argv[3])
+
+bin_path = 'experiment_results/bin/'
 
 
 class QSA:
@@ -35,18 +37,24 @@ class QSA:
         self.gHats = gHats
         self.deltas = deltas
         fourierBasisOrder = 4
-        self.safetyDataSize = episodes*2
+        self.safetyDataSize = episodes
 
         datasetGenerator = Dataset(episodes, env)
         theta = np.zeros((env.getStateDims(), env.getNumActions()))
         self.candidateDataset = datasetGenerator.generate_dataset(theta)
         theta = np.zeros((env.getStateDims(), env.getNumActions()))
-        datasetGenerator = Dataset(episodes*2, env)
+        datasetGenerator = Dataset(episodes, env)
         self.safetyDataset = datasetGenerator.generate_dataset(theta)
         self.feval = 0
         # print((self.candidateDataset['rewards'][0]))
 
     # , candidateDataset, fHat, gHats, deltas, safetyDataSize
+
+    def getCandidateDataset(self):
+        return self.candidateDataset
+
+    def getSafetyDataset(self):
+        return self.safetyDataset
 
     def candidateObjective(self, thetaToEvaluate):
         """
@@ -86,12 +94,12 @@ class QSA:
                 result = result - upperBound
 
         # Negative because our optimizer (Powell) is a minimizer, but we want to maximize the candidate objective
-    #    print("result=",-result,"fhat=",resf, "upperboudn", upperBound)
-        if self.feval%50 == 0:
-            print("theta eval =", thetaToEvaluate)
-            filename = str(param1)+'_'+str(param2)+'_'+str(trial)
-            np.save(filename,thetaToEvaluate)
-            print("result=",-result,"fhat=",resf, "upperboudn", upperBound)
+        #    print("result=",-result,"fhat=",resf, "upperboudn", upperBound)
+        if self.feval % 50 == 0:
+            # print("theta eval =", thetaToEvaluate)
+            # filename = str(param1)+'_'+str(param2)+'_'+str(trial)
+            # np.save(filename,thetaToEvaluate)
+            print("result=", -result, "fhat=", resf, "upperboudn", upperBound)
         return -result
 
     def getCandidateSolution(self):
@@ -114,32 +122,6 @@ class QSA:
         xMin = optimizer.run_optimizer()
         return xMin
 
-    # def QSA(self, env, episodes, fHat, gHats, deltas):
-    # fourierBasisOrder = 4
-    # safetyDatasetSize = episodes
-    #
-    # datasetGenerator = Dataset(env, episodes)
-    # theta = np.zeros((env.getStateDims() ** fourierBasisOrder, env.getNumActions()))
-    # candidateDataset = datasetGenerator.generate_dataset(theta)
-    # theta = np.zeros((env.getStateDims() ** fourierBasisOrder, env.getNumActions()))
-    # safetyDataset = datasetGenerator.generate_dataset(theta)
-    #
-    # # Get the candidate solution
-    # candidateSolution = self.getCandidateSolution(candidateDataset, episodes, fHat, gHats, deltas, safetyDatasetSize)
-    #
-    # # Run the safety test
-    # passedSafety = self.safetyTest(candidateSolution, safetyDataset, fHat, gHats, deltas)
-    #
-    #
-    #
-    # if passedSafety:
-    #     print("A solution was found: ", candidateSolution)
-    #     print("fHat of solution (computed over all data, D):", fHat(candidateSolution, dataset))
-    # else:
-    #     print("No solution found")
-    #
-    # # Return the result and success flag
-    # return [candidateSolution, passedSafety]
 
     def getTotalDataset(self):
         dataset = self.candidateDataset.copy()
@@ -162,169 +144,162 @@ class QSA:
             # print(upperBound)
 
             if upperBound > 0.0:
-                print("Failed on ", i, "g hat", upperBound)# If the current constraint was not satisfied, the safety test failed
+                print("Failed on ", i, "g hat",
+                      upperBound)  # If the current constraint was not satisfied, the safety test failed
                 return False
 
         # If we get here, all of the behavioral constraints were satisfied
         return True
 
-
-def gHatCartpole(estimates):
-    # return 100 - estimates
-    return 170 - estimates
-    # return 185 - estimates
+    def objectiveWithoutConstraints(self, thetaToEvaluate):
+        result, estimates = self.fHat(thetaToEvaluate, self.candidateDataset, self.episodes, self.env)
+        return -result
 
 
-def gHat1Gridworld(estimates):
-    return -130 - estimates
-    # return 50 - estimates
+@ray.remote
+def run_experiments(worker_id, nWorkers, ms, numM, numTrials, mTest, env, gHats, deltas):
+    # Results of the Seldonian algorithm runs
+    seldonian_solutions_found = np.zeros((numTrials, numM))  # Stores whether a solution was found (1=True,0=False)
+    seldonian_failures_g1 = np.zeros(
+        (numTrials, numM))  # Stores whether solution was unsafe, (1=True,0=False), for the 1st constraint, g_1
+    seldonian_failures_g2 = np.zeros(
+        (numTrials, numM))  # Stores whether solution was unsafe, (1=True,0=False), for the 2nd constraint, g_2
+    seldonian_fs = np.zeros((numTrials, numM))  # Stores the primary objective values (fHat) if a solution was found
 
+    # Results of the Least-Squares (LS) linear regression runs
+    LS_solutions_found = np.ones((numTrials, numM))  # Stores whether a solution was found. These will all be true (=1)
+    LS_failures_g1 = np.zeros(
+        (numTrials, numM))  # Stores whether solution was unsafe, (1=True,0=False), for the 1st constraint, g_1
+    LS_failures_g2 = np.zeros(
+        (numTrials, numM))  # Stores whether solution was unsafe, (1=True,0=False), for the 2nd constraint, g_2
+    LS_fs = np.zeros((numTrials, numM))  # Stores the primary objective values (f) if a solution was found
 
-def gHat2Gridworld(estimates):
-    return estimates + 1
+    # Prepares file where experiment results will be saved
+    experiment_number = worker_id
+    outputFile = bin_path + 'results%d.npz' % experiment_number
+    print("Writing output to", outputFile)
 
+    # Generate the data used to evaluate the primary objective and failure rates
+    # np.random.seed((experiment_number + 1) * 9999)
 
-def gHat1Mountaincar(estimates):
-    # return 100 - estimates
-    # return 150 - estimates
-    return 150 - estimates
-
-
-def gHat2Mountaincar(estimates):
-    # return -830 - estimates
-    return estimates + 1
-
-# @ray.remote
-def testCartpole(ms, numM, numTrials):
-    for trial in range(numTrials):
-        for m in [param2]:
-            env = Cartpole()
-            # np.random.seed(0)  # Create the random number generator to use, with seed zero
-            episodes = m
-            print("m=",m,"Number of episodes =", episodes)
-            # Create the behavioral constraints - each is a gHat function and a confidence level delta
-            gHats = [gHatCartpole]
-            deltas = [0.1]
-            fHat = PDIS
-
-            qsa = QSA(env, episodes, fHat, gHats, deltas)  # Run the Quasi-Seldonian algorithm
-
-            # Get the candidate solution
-            candidateSolution = qsa.getCandidateSolution()
-
-            # Run the safety test
-            passedSafety = qsa.safetyTest(candidateSolution)
-
-            if passedSafety:
-                print("m=",m,"A solution was found: ", candidateSolution)
-                print("m=",m,"fHat of solution (computed over all data, D):", fHat(candidateSolution, qsa.getTotalDataset(), episodes, env))
-            else:
-                print("m=",m,"No solution found")
-
-    # Return the result and success flag
-    return [candidateSolution, passedSafety]
-
-# @ray.remote
-def testMountaincar(ms, numM, numTrials):
-    for trial in range(numTrials):
-        for m in [param2]:
-            env = Mountaincar()
-            # np.random.seed(0)  # Create the random number generator to use, with seed zero
-            episodes = m
-            print("m=",m,"Number of episodes =", episodes)
-            # Create the behavioral constraints - each is a gHat function and a confidence level delta
-            gHats = [gHat1Mountaincar]
-            deltas = [0.1]
-            fHat = PDIS
-            # fHat = total_return
-            qsa = QSA(env, episodes, fHat, gHats, deltas)  # Run the Quasi-Seldonian algorithm
-
-            # Get the candidate solution
-            candidateSolution = qsa.getCandidateSolution()
-
-            # Run the safety test
-            passedSafety = qsa.safetyTest(candidateSolution)
-
-            if passedSafety:
-                print("m=",m,"A solution was found: ", candidateSolution)
-                print("m=",m,"fHat of solution (computed over all data, D):",
-                      fHat(candidateSolution, qsa.getTotalDataset(), episodes, env))
-            else:
-                print("m=",m,"No solution found")
-
-    # Return the result and success flag
-    return [candidateSolution, passedSafety]
-
-# @ray.remote
-def testGridworld(ms, numM, numTrials):
-    for trial in range(numTrials):
-        for m in [param2]:
-            env = Gridworld()
-            # np.random.seed(0)  # Create the random number generator to use, with seed zero
-            episodes = m
-            print("m=",m,"Number of episodes =", episodes)
-
-            # Create the behavioral constraints - each is a gHat function and a confidence level delta
-            gHats = [gHat1Gridworld, gHat2Gridworld]
-            deltas = [0.1, 0.1]
-            fHat = PDIS
-
-            qsa = QSA(env, episodes, fHat, gHats, deltas)  # Run the Quasi-Seldonian algorithm
-
-            # Get the candidate solution
-            candidateSolution = qsa.getCandidateSolution()
-
-            # Run the safety test
-            passedSafety = qsa.safetyTest(candidateSolution)
-
-            if passedSafety:
-                print("m=",m,"A solution was found: ", candidateSolution)
-                print("m=",m,"fHat of solution (computed over all data, D):",
-                      fHat(candidateSolution, qsa.getTotalDataset(), episodes, env))
-            else:
-                print("m=",m,"No solution found")
-
-    # Return the result and success flag
-    return [candidateSolution, passedSafety]
-
-# @ray.remote
-def main():
-    # print(int(sys.argv[1]), int(sys.argv[2]))
-    env_map = {0:'Mountaincar', 1:'Gridworld', 2:'Cartpole'}
-    env_choice = param1
-    print("Running environment ", env_choice, " Name ", env_map[env_choice])
-    if env_choice == 0:
-        func = testMountaincar
-    elif env_choice == 1:
-        func = testGridworld
-    else:
-        func = testCartpole
-
-    nWorkers = 5
-    ms = [2 ** i for i in range(5, 10)]
-    numM = len(ms)
-    numTrials = 10
-    # _ = ray.get([func.remote(ms, numM, numTrials) for worker_id in
-    #              range(1, nWorkers + 1)])
-
-    func(ms, numM, 1)
-
-
-def test():
-    m=100
-    env = Mountaincar()
-    # np.random.seed(0)  # Create the random number generator to use, with seed zero
-    episodes = m
-    print("m=", m, "Number of episodes =", episodes)
-    # Create the behavioral constraints - each is a gHat function and a confidence level delta
-    gHats = [gHatCartpole]
-    deltas = [0.1]
     fHat = PDIS
+    # fHat = total_return
 
-    qsa = QSA(env, episodes, fHat, gHats, deltas)
-    qsa.safetyTest(np.array([ 0]))
+    for trial in range(numTrials):
+        for (mIndex, m) in enumerate(ms):
+
+            # Generate the training data, D
+            # base_seed = (experiment_number * numTrials) + 1
+            # np.random.seed(base_seed + trial)  # done to obtain common random numbers for all values of m
+            qsa = QSA(env, m, fHat, gHats, deltas)  # Run the Quasi-Seldonian algorithm
+            candidateDataset = qsa.getCandidateDataset()
+            safetyDataset = qsa.getSafetyDataset()
+            # Get the candidate solution
+            result = qsa.getCandidateSolution()
+
+            # Run the safety test
+            passedSafetyTest = qsa.safetyTest(result)
+
+            # Run the Quasi-Seldonian algorithm
+            # (result, passedSafetyTest) = QSA(trainX, trainY, gHats, deltas)
+            if passedSafetyTest:
+                seldonian_solutions_found[trial, mIndex] = 1
+                trueEstimate, all_estimates = qsa.fHat(result, safetyDataset, m,
+                                                       env)  # Get the "true" mean squared error using the testData
+                seldonian_failures_g1[
+                    trial, mIndex] = 1 if trueEstimate < env.threshold else 0  # Check if the first behavioral constraint was violated
+                # seldonian_failures_g2[
+                # trial, mIndex] = 1 if trueEstimate < 1.25 else 0  # Check if the second behavioral constraint was violated
+                seldonian_fs[trial, mIndex] = trueEstimate  # Store the "true" negative mean-squared error
+                print(
+                    f"[(worker {worker_id}/{nWorkers}) Seldonian trial {trial + 1}/{numTrials}, m {m}] A solution was found: [{result[0]:.10f}, {result[1]:.10f}]\tfHat over test data: {trueEstimate:.10f}")
+            else:
+                seldonian_solutions_found[trial, mIndex] = 0  # A solution was not found
+                seldonian_failures_g1[trial, mIndex] = 0  # Returning NSF means the first constraint was not violated
+                # seldonian_failures_g2[trial, mIndex] = 0  # Returning NSF means the second constraint was not violated
+                seldonian_fs[
+                    trial, mIndex] = None  # This value should not be used later. We use None and later remove the None values
+                print(
+                    f"[(worker {worker_id}/{nWorkers}) Seldonian trial {trial + 1}/{numTrials}, m {m}] No solution found")
+
+            theta = np.zeros((env.getStateDims() * env.getNumActions()))
+            optimizer = Powell(theta, qsa.objectiveWithoutConstraints)
+            xMin = optimizer.run_optimizer()
+
+            # # Run the Least Squares algorithm
+            # theta = leastSq(trainX, trainY)  # Run least squares linear regression
+            trueEstimate, totalEstimates = qsa.fHat(xMin, safetyDataset, m, env)  # Get the "true" mean squared error using the testData
+            LS_failures_g1[
+                trial, mIndex] = 1 if trueEstimate < env.threshold else 0  # Check if the first behavioral constraint was violated
+            # LS_failures_g2[
+            #     trial, mIndex] = 1 if trueEstimate < 1.25 else 0  # Check if the second behavioral constraint was violated
+            LS_fs[trial, mIndex] = trueEstimate  # Store the "true" negative mean-squared error
+            print(
+                f"[(worker {worker_id}/{nWorkers}) LeastSq   trial {trial + 1}/{numTrials}, m {m}] LS fHat over test data: {trueEstimate:.10f}")
+        print()
+
+    np.savez(outputFile,
+             ms=ms,
+             seldonian_solutions_found=seldonian_solutions_found,
+             seldonian_fs=seldonian_fs,
+             seldonian_failures_g1=seldonian_failures_g1,
+             seldonian_failures_g2=seldonian_failures_g2,
+             LS_solutions_found=LS_solutions_found,
+             LS_fs=LS_fs,
+             LS_failures_g1=LS_failures_g1,
+             LS_failures_g2=LS_failures_g2)
+
+
 
 
 if __name__ == "__main__":
-    # test()
-    main()
+    env_map = {0: 'Mountaincar', 1: 'Gridworld', 2: 'Cartpole'}
+    env_choice = param1
+    print("Running environment ", env_choice, " Name ", env_map[env_choice])
+    if env_choice == 0:
+        env = Mountaincar()
+        gHats = [gHat1Mountaincar]
+        deltas = [0.1]
+    elif env_choice == 1:
+        env = Gridworld()
+        gHats = [gHat1Gridworld]
+        deltas = [0.1]
+    else:
+        env = Cartpole()
+        gHats = [gHatCartpole]
+        deltas = [0.1]
+
+    # Create the behavioral constraints: each is a gHat function and a confidence level delta
+    # gHats = [gHat1, gHat2]
+    # deltas = [0.1, 0.1]
+
+    print("\nUsage: python main_plotting.py [number_threads]")
+    print("       Assuming the default: 16")
+    nWorkers = 8  # Workers is the number of threads running experiments in parallel
+
+    print(f"Running experiments on {nWorkers} threads")
+
+    # We will use different amounts of data, m. The different values of m will be stored in ms.
+    # These values correspond to the horizontal axis locations in all three plots we will make.
+    # We will use a logarithmic horizontal axis, so the amounts of data we use shouldn't be evenly spaced.
+    ms = [2 ** i for i in range(5, 17)]  # ms = [32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536]
+    numM = len(ms)
+
+    # How many trials should we average over?
+    numTrials = 10  # We pick 70 because with 70 trials per worker, and 16 workers, we get >1000 trials for each
+    # value of m
+
+    # How much data should we generate to compute the estimates of the primary objective and behavioral constraint
+    # function values that we call "ground truth"? Each candidate solution deemed safe, and identified using limited
+    # training data, will be evaluated over this large number of points to check whether it is really safe,
+    # and to compute its "true" mean squared error.
+    mTest = ms[-1] * 100  # about 5,000,000 test samples
+
+    # Start 'nWorkers' threads in parallel, each one running 'numTrials' trials. Each thread saves its results to a file
+    tic = timeit.default_timer()
+    _ = ray.get(
+        [run_experiments.remote(worker_id, nWorkers, ms, numM, numTrials, mTest, env, gHats, deltas) for worker_id in
+         range(1, nWorkers + 1)])
+    toc = timeit.default_timer()
+    time_parallel = toc - tic  # Elapsed time in seconds
+    print(f"Time ellapsed: {time_parallel}")

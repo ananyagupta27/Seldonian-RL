@@ -55,6 +55,13 @@ class Mountaincar(Environment):
     def gamma(self) -> float:
         return self._gamma
 
+    @property
+    def threshold(self):
+        """
+        The threshold performance
+        """
+        return 150
+
     def getNumActions(self):
         return self.numActions
 

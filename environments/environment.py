@@ -27,6 +27,15 @@ class Environment(ABC):
         """
         pass
 
+    @property
+    @abstractmethod
+    def threshold(self):
+        """
+        The threshold performance.
+        """
+        pass
+
+
     @abstractmethod
     def getNumActions(self):
         pass
