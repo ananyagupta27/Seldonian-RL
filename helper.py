@@ -9,6 +9,7 @@ sys.path.insert(1, os.path.join(os.path.dirname(sys.path[0]), 'environments'))
 sys.path.insert(1, os.path.join(os.path.dirname(sys.path[0]), 'optimizers'))
 
 from environments.gridworld import Gridworld
+from environments.gridworldv2 import Gridworldv2
 from environments.cartpole import Cartpole
 
 
@@ -65,7 +66,7 @@ def fourierBasis(state, order_list):
 
 
 def get_transformed_state(env, state, theta, order=3):
-    if type(env) is Gridworld:
+    if type(env) is Gridworld or type(env) is Gridworldv2:
         return state.reshape(-1,1)
     state_copy = state.copy()
     for i, item in enumerate(env.observation_space.low):
@@ -87,6 +88,19 @@ def get_action(actPr):
 
     for i in range(actions):
         sum_pr += actPr[0][i]
+        if temp <= sum_pr:
+            return i
+    return actions - 1
+
+
+def get_action1(actPr):
+    actions = actPr.shape[0]
+    temp = np.random.uniform(0, 1)
+    sum_pr = 0
+    # print(actPr, actions)
+
+    for i in range(actions):
+        sum_pr += actPr[i]
         if temp <= sum_pr:
             return i
     return actions - 1

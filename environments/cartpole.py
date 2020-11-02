@@ -61,6 +61,11 @@ class Cartpole(Environment):
     def gamma(self) -> float:
         return self._gamma
 
+
+    @property
+    def horizonLength(self):
+        return 2000
+
     @property
     def threshold(self):
         """

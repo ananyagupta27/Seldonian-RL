@@ -12,6 +12,7 @@ sys.path.insert(1, os.path.join(os.path.dirname(sys.path[0]), 'environments'))
 sys.path.insert(1, os.path.join(os.path.dirname(sys.path[0]), 'optimizers'))
 
 from environments.gridworld import Gridworld
+from environments.gridworldv2 import Gridworldv2
 from environments.cartpole import Cartpole
 from environments.mountaincar import Mountaincar
 
@@ -20,7 +21,7 @@ from optimizers.powell import Powell
 from optimizers.cmaes import CMAES
 from helper import *
 from is_estimates import *
-from create_dataset import Dataset
+from create_dataset import Dataset, Model
 from gHats import *
 
 param1 = int(sys.argv[1])
@@ -30,7 +31,7 @@ bin_path = 'experiment_results/bin/'
 
 class QSA:
 
-    def __init__(self, env, episodes, fHat, gHats, deltas):
+    def __init__(self, env, episodes, fHat, gHats, deltas, candidateDataset, safetyDataset):
         self.env = env
         self.episodes = episodes
         self.fHat = fHat
@@ -38,23 +39,25 @@ class QSA:
         self.deltas = deltas
         fourierBasisOrder = 4
         self.safetyDataSize = episodes
+        self.candidateDataset = candidateDataset
+        self.safetyDataset = safetyDataset
 
-        datasetGenerator = Dataset(episodes, env)
-        theta = np.zeros((env.getStateDims(), env.getNumActions()))
-        self.candidateDataset = datasetGenerator.generate_dataset(theta)
-        theta = np.zeros((env.getStateDims(), env.getNumActions()))
-        datasetGenerator = Dataset(episodes, env)
-        self.safetyDataset = datasetGenerator.generate_dataset(theta)
+        # datasetGenerator = Dataset(episodes, env)
+        # theta = np.zeros((env.getStateDims(), env.getNumActions()))
+        # self.candidateDataset = datasetGenerator.generate_dataset(theta)
+        # theta = np.zeros((env.getStateDims(), env.getNumActions()))
+        # datasetGenerator = Dataset(episodes, env)
+        # self.safetyDataset = datasetGenerator.generate_dataset(theta)
         self.feval = 0
         # print((self.candidateDataset['rewards'][0]))
 
     # , candidateDataset, fHat, gHats, deltas, safetyDataSize
 
-    def getCandidateDataset(self):
-        return self.candidateDataset
-
-    def getSafetyDataset(self):
-        return self.safetyDataset
+    # def getCandidateDataset(self):
+    #     return self.candidateDataset
+    #
+    # def getSafetyDataset(self):
+    #     return self.safetyDataset
 
     def candidateObjective(self, thetaToEvaluate):
         """
@@ -182,18 +185,35 @@ def run_experiments(worker_id, nWorkers, ms, numM, numTrials, mTest, env, gHats,
     # Generate the data used to evaluate the primary objective and failure rates
     # np.random.seed((experiment_number + 1) * 9999)
 
-    fHat = PDIS
+    fHat = IS
+    print("simple importance sampling")
     # fHat = total_return
+
+
 
     for trial in range(numTrials):
         for (mIndex, m) in enumerate(ms):
 
+            datasetGenerator = Dataset(m, env)
+            theta = np.zeros((env.getStateDims(), env.getNumActions()))
+            candidateDataset = datasetGenerator.generate_dataset(theta)
+            model = Model(candidateDataset, m, env.getStateDims(), env.getNumActions(), env.horizonLength)
+            candidateDataset = model.makeMLEModel()
+
+            theta = np.zeros((env.getStateDims(), env.getNumActions()))
+            datasetGenerator = Dataset(m, env)
+            safetyDataset = datasetGenerator.generate_dataset(theta)
+            model = Model(safetyDataset, m, env.getStateDims(), env.getNumActions(), env.horizonLength)
+            safetyDataset = model.makeMLEModel()
+
+            # dataset, episodes, numStates, numActions, L
+
             # Generate the training data, D
             # base_seed = (experiment_number * numTrials) + 1
             # np.random.seed(base_seed + trial)  # done to obtain common random numbers for all values of m
-            qsa = QSA(env, m, fHat, gHats, deltas)  # Run the Quasi-Seldonian algorithm
-            candidateDataset = qsa.getCandidateDataset()
-            safetyDataset = qsa.getSafetyDataset()
+            qsa = QSA(env, m, fHat, gHats, deltas,  candidateDataset, safetyDataset)  # Run the Quasi-Seldonian algorithm
+            # candidateDataset = qsa.getCandidateDataset()
+            # safetyDataset = qsa.getSafetyDataset()
             # Get the candidate solution
             result = qsa.getCandidateSolution()
 
@@ -250,9 +270,7 @@ def run_experiments(worker_id, nWorkers, ms, numM, numTrials, mTest, env, gHats,
              LS_failures_g2=LS_failures_g2)
 
 
-
-
-if __name__ == "__main__":
+def main():
     env_map = {0: 'Mountaincar', 1: 'Gridworld', 2: 'Cartpole'}
     env_choice = param1
     print("Running environment ", env_choice, " Name ", env_map[env_choice])
@@ -263,6 +281,10 @@ if __name__ == "__main__":
     elif env_choice == 1:
         env = Gridworld()
         gHats = [gHat1Gridworld]
+        deltas = [0.1]
+    elif env_choice == 2:
+        env = Gridworldv2()
+        gHats = [gHatGridworldv2]
         deltas = [0.1]
     else:
         env = Cartpole()
@@ -275,14 +297,14 @@ if __name__ == "__main__":
 
     print("\nUsage: python main_plotting.py [number_threads]")
     print("       Assuming the default: 16")
-    nWorkers = 8  # Workers is the number of threads running experiments in parallel
+    nWorkers = 4  # Workers is the number of threads running experiments in parallel
 
     print(f"Running experiments on {nWorkers} threads")
 
     # We will use different amounts of data, m. The different values of m will be stored in ms.
     # These values correspond to the horizontal axis locations in all three plots we will make.
     # We will use a logarithmic horizontal axis, so the amounts of data we use shouldn't be evenly spaced.
-    ms = [2 ** i for i in range(5, 17)]  # ms = [32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536]
+    ms = [5,10,16,32, 128, 256, 512, 1024, 2048]  # ms = [32, 64, 128, 256, 512, 1024, 2048, 4096, 8192]
     numM = len(ms)
 
     # How many trials should we average over?
@@ -303,3 +325,8 @@ if __name__ == "__main__":
     toc = timeit.default_timer()
     time_parallel = toc - tic  # Elapsed time in seconds
     print(f"Time ellapsed: {time_parallel}")
+
+
+if __name__ == "__main__":
+    main()
+

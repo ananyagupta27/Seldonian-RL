@@ -7,11 +7,15 @@ def gHatCartpole(estimates):
 def gHat1Gridworld(estimates):
     # return -130 - estimates
     # return 50 - estimates
-    return 70 - estimates
+    return -130 - estimates
+
 
 def gHat2Gridworld(estimates):
     return estimates + 1
 
+
+def gHatGridworldv2(estimates):
+    return 30 - estimates
 
 def gHat1Mountaincar(estimates):
     # return 100 - estimates

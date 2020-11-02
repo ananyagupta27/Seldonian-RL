@@ -8,7 +8,7 @@ from .environment import Environment
 
 
 class Gridworld(Environment):
-    def __init__(self, size=4, gamma=1):
+    def __init__(self, size=5, gamma=1):
         self.size = int(size)
         self.x = int(0)
         self.y = int(0)
@@ -23,6 +23,7 @@ class Gridworld(Environment):
         self._gamma = gamma
         self.numActions = 4
 
+
     @property
     def gamma(self) -> float:
         return self._gamma
@@ -30,6 +31,11 @@ class Gridworld(Environment):
     @property
     def isEnd(self) -> bool:
         return self.terminal()
+
+
+    @property
+    def horizonLength(self):
+        return 500
 
     @property
     def state(self) -> np.ndarray:
@@ -40,14 +46,14 @@ class Gridworld(Environment):
         """
         The threshold performance
         """
-        return 70
+        return -130
 
 
     def getNumActions(self):
         return self.numActions
 
     def getStateDims(self):
-        return self.state.shape[1]
+        return self.size ** 2
 
     def reset(self):
         self.x = 0
@@ -56,11 +62,12 @@ class Gridworld(Environment):
         return self.get_state()
 
     def step(self, action):
-
+        self.count += 1
         a = int(action)
         s = np.random.uniform(0, 1)
         if s < 0.1:
-            return self.get_state(), -1, self.terminal()
+            r=-1
+            return self.get_state(), r, self.terminal()
         if a == 0:
             self.y -= 1
         elif a == 1:
@@ -75,11 +82,8 @@ class Gridworld(Environment):
 
         self.x = int(np.clip(self.x, 0, self.size - 1))
         self.y = int(np.clip(self.y, 0, self.size - 1))
-        self.count += 1
-        reward = -1.0
 
-        if self.terminal():
-            reward = 200
+        reward = -1.0
 
         return self.get_state(), reward, self.terminal()
 
@@ -91,7 +95,9 @@ class Gridworld(Environment):
     def get_state(self):
         x = np.zeros(self.nums, dtype=np.float32)
         x[self.x * self.size + self.y] = 1
+
         return x
+
 
     def terminal(self):
         return (self.x == self.size - 1 and self.y == self.size - 1) or (self.count > 500)
@@ -99,3 +105,33 @@ class Gridworld(Environment):
 
     def R(self, state, action, nextState):
         return -1
+
+
+
+# def test():
+#     env = Gridworld()
+#     avr = 0
+#     for i in range(500):
+#         G = 0
+#         env.reset()
+#         t = 0
+#         while True:
+#             a = np.random.choice(4,1)
+#             s, r, isEnd = env.step(a)
+#             G += r
+#
+#             if isEnd:
+#                 break
+#
+#
+#             t += 1
+#         print("episode=", i, " G", G, " t=",t,"count", env.count)
+#         avr += G
+#     print(avr/500,"avr")
+#
+#
+#
+# if __name__ == "__main__":
+#     test()
+
+    # 145.7059 143-147

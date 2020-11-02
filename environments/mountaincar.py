@@ -55,6 +55,11 @@ class Mountaincar(Environment):
     def gamma(self) -> float:
         return self._gamma
 
+
+    @property
+    def horizonLength(self):
+        return 5000
+
     @property
     def threshold(self):
         """

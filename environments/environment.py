@@ -29,6 +29,14 @@ class Environment(ABC):
 
     @property
     @abstractmethod
+    def horizonLength(self):
+        """
+        The reward discount factor.
+        """
+        pass
+
+    @property
+    @abstractmethod
     def threshold(self):
         """
         The threshold performance.

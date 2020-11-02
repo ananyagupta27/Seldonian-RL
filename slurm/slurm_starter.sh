@@ -13,7 +13,7 @@ mkdir -p $log_dir
 
 for TRIAL in 1 2 3 4 5 6 7
 do
-  for ENV in 2
+  for ENV in 0 1 2
   do
     for EPISODES in 5 10 100 500 1000 5000 10000
     do

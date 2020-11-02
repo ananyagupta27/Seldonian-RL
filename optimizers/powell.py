@@ -28,14 +28,14 @@ class Powell(Optimizer):
     def run_optimizer(self, verbose=True) -> np.ndarray:
         # Chooses the black-box optimizer we will use (Powell)
         minimizer_method = 'Powell'
-        minimizer_options = {'disp': False, 'maxfev': 1, 'maxiter':1}
+        minimizer_options = {'disp': False, 'maxfev': 1000, 'maxiter':1000}
 
         # Use Powell to get a candidate solution that tries to maximize candidateObjective
         res = minimize(self.evaluationFunction, x0=self.theta, method=minimizer_method, options=minimizer_options, tol=0.001)
 
         # Return the candidate solution we believe will pass the safety test
         print(f'x_min inside powell {res.x}')
-        print(f'function value at x_min is {self.evaluationFunction(res.x)}')
+        print(f'function value at x_min is {self.evaluationFunction(res.x)}, Message is {res.message}')
         return res.x
 
 
