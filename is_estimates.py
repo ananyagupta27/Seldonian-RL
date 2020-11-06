@@ -102,9 +102,50 @@ def PDIS(theta, dataset, episodes, env):
     average_estimate = np.mean(is_estimates)
     return average_estimate, np.array(is_estimates)
 
-#
-# def WIS(theta, dataset, episodes, env):
-#     pass
+
+
+def WIS(theta, dataset, episodes, env):
+    states = dataset['states']
+    actions = dataset['actions']
+    rewards = dataset['rewards']
+    pi_b = dataset['pi_b']
+
+    theta = theta.reshape(env.getStateDims(), env.getNumActions())
+
+    is_estimates = []
+    average_estimate = 0
+    norm = 0
+    for episode in range(episodes):
+
+        G_h_l = 0
+        is_current = 0
+
+        frac = 1
+        try:
+            for timestep in range(len(states[episode])):
+                s = states[episode][timestep]
+                a = actions[episode][timestep]
+                r = rewards[episode][timestep]
+                pi_b_cur = pi_b[episode][timestep]
+
+                G_h_l += r
+
+                s_transformed = get_transformed_state(env, s, theta)
+                pi_e = np.exp(np.dot(s_transformed.T, theta)) / np.sum(np.exp(np.dot(s_transformed.T, theta)))
+
+                frac *= pi_e[0][a] / pi_b_cur
+
+            is_current = G_h_l * frac
+            norm += frac
+        except Exception as e:
+            print("Exception Overflow", e)
+            continue
+        is_estimates.append(is_current)
+    is_estimates = is_estimates * episodes / norm
+    average_estimate = np.mean(is_estimates)
+    # print(is_estimates)
+    return average_estimate, np.array(is_estimates)
+
 
 def DR(theta, dataset, episodes, env):
 

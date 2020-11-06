@@ -185,7 +185,7 @@ def run_experiments(worker_id, nWorkers, ms, numM, numTrials, mTest, env, gHats,
     # Generate the data used to evaluate the primary objective and failure rates
     # np.random.seed((experiment_number + 1) * 9999)
 
-    fHat = IS
+    fHat = WIS
     print("simple importance sampling")
     # fHat = total_return
 
