@@ -91,3 +91,8 @@ class Environment(ABC):
                         last action in the environment.
         """
         pass
+
+
+    @abstractmethod
+    def getDiscreteState(self, state):
+        pass

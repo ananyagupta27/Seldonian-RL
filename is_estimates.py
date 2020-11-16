@@ -24,9 +24,6 @@ from create_dataset import Dataset, Model
 # dataset = {'states': states, 'actions': actions, 'rewards': rewards, 'pi_b': pi_b}
 
 
-
-
-
 def IS(theta, dataset, episodes, env):
     states = dataset['states']
     actions = dataset['actions']
@@ -58,7 +55,9 @@ def IS(theta, dataset, episodes, env):
                 frac *= pi_e[0][a] / pi_b_cur
 
             is_current = G_h_l * frac
-        except:
+
+        except Exception as e:
+            print("error overflow", e)
             continue
         is_estimates.append(is_current)
     average_estimate = np.mean(is_estimates)
@@ -95,13 +94,12 @@ def PDIS(theta, dataset, episodes, env):
 
                 is_current += (env.gamma ** timestep) * (rewards[episode][timestep] * frac)
         except Exception as e:
-            print("error overflow",e)
+            print("error overflow", e)
             continue
         is_estimates.append(is_current)
     # print(is_estimates)
     average_estimate = np.mean(is_estimates)
     return average_estimate, np.array(is_estimates)
-
 
 
 def WIS(theta, dataset, episodes, env):
@@ -148,7 +146,6 @@ def WIS(theta, dataset, episodes, env):
 
 
 def DR(theta, dataset, episodes, env):
-
     states = dataset['states']
     actions = dataset['actions']
     rewards = dataset['rewards']
@@ -157,7 +154,7 @@ def DR(theta, dataset, episodes, env):
     R = dataset['R']
 
     theta = theta.reshape(env.getStateDims(), env.getNumActions())
-    max_exp = np.max(theta,axis=1).reshape(theta.shape[0], 1)
+    max_exp = np.max(theta, axis=1).reshape(theta.shape[0], 1)
     pi_theta = np.exp(theta - max_exp) / np.sum(np.exp(theta - max_exp), axis=1).reshape(env.getStateDims(), 1)
     # print(pi_theta)
     Q, V = loadEvalPolicy(pi_theta, episodes, p, R, env)
@@ -197,8 +194,11 @@ def DR(theta, dataset, episodes, env):
             is_current += curGamma * rho[timestep][i] * rewards[i][timestep]
             weightV = 1 if timestep == 0 else rho[timestep - 1][i]
             weightQ = rho[timestep - 1][i]
-            is_current -= curGamma * (weightQ * Q[0][np.argmax(states[i][timestep])][actions[i][timestep]] - weightV
-                                      * V[0][np.argmax(states[i][timestep])])
+            # is_current -= curGamma * (weightQ * Q[0][np.argmax(states[i][timestep])][actions[i][timestep]] - weightV
+            #                           * V[0][np.argmax(states[i][timestep])])
+            is_current -= curGamma * (
+                    weightQ * Q[0][env.getDiscreteState(states[i][timestep])][actions[i][timestep]] - weightV
+                    * V[0][env.getDiscreteState(states[i][timestep])])
             curGamma *= gamma
         is_estimates.append(is_current)
     # print(is_estimates)
@@ -242,7 +242,6 @@ def loadEvalPolicy(pi_e, episodes, p, R, env):
 
 
 def total_return(dataset, episodes):
-
     states = dataset['states']
     rewards = dataset['rewards']
 
@@ -259,7 +258,6 @@ def total_return(dataset, episodes):
     average_estimate = np.mean(is_estimates)
     # print(is_estimates)
     return average_estimate, np.array(is_estimates)
-
 
 # def test():
 #     env = Mountaincar()

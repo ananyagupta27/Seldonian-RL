@@ -185,7 +185,7 @@ def run_experiments(worker_id, nWorkers, ms, numM, numTrials, mTest, env, gHats,
     # Generate the data used to evaluate the primary objective and failure rates
     # np.random.seed((experiment_number + 1) * 9999)
 
-    fHat = WIS
+    fHat = DR
     print("simple importance sampling")
     # fHat = total_return
 
@@ -197,13 +197,13 @@ def run_experiments(worker_id, nWorkers, ms, numM, numTrials, mTest, env, gHats,
             datasetGenerator = Dataset(m, env)
             theta = np.zeros((env.getStateDims(), env.getNumActions()))
             candidateDataset = datasetGenerator.generate_dataset(theta)
-            model = Model(candidateDataset, m, env.getStateDims(), env.getNumActions(), env.horizonLength)
+            model = Model(env, candidateDataset, m, env.getStateDims(), env.getNumActions(), env.horizonLength)
             candidateDataset = model.makeMLEModel()
 
             theta = np.zeros((env.getStateDims(), env.getNumActions()))
             datasetGenerator = Dataset(m, env)
             safetyDataset = datasetGenerator.generate_dataset(theta)
-            model = Model(safetyDataset, m, env.getStateDims(), env.getNumActions(), env.horizonLength)
+            model = Model(env, safetyDataset, m, env.getStateDims(), env.getNumActions(), env.horizonLength)
             safetyDataset = model.makeMLEModel()
 
             # dataset, episodes, numStates, numActions, L
@@ -271,7 +271,7 @@ def run_experiments(worker_id, nWorkers, ms, numM, numTrials, mTest, env, gHats,
 
 
 def main():
-    env_map = {0: 'Mountaincar', 1: 'Gridworld', 2: 'Cartpole'}
+    env_map = {0: 'Mountaincar', 1: 'Gridworld', 2: 'Gridworldv2', 3: 'Cartpole'}
     env_choice = param1
     print("Running environment ", env_choice, " Name ", env_map[env_choice])
     if env_choice == 0:
@@ -286,10 +286,12 @@ def main():
         env = Gridworldv2()
         gHats = [gHatGridworldv2]
         deltas = [0.1]
-    else:
+    elif env_choice == 3:
         env = Cartpole()
         gHats = [gHatCartpole]
         deltas = [0.1]
+    else:
+        print("Wrong environment choice")
 
     # Create the behavioral constraints: each is a gHat function and a confidence level delta
     # gHats = [gHat1, gHat2]

@@ -100,6 +100,9 @@ class Gridworldv2(Environment):
         x[self.x * self.size + self.y] = 1
         return x
 
+    def getDiscreteState(self, state):
+        return np.argmax(state)
+
 
     def terminal(self):
         return (self.x == self.size - 1 and self.y == self.size - 1) or (self.count >= self.horizonLength - 1)

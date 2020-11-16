@@ -136,3 +136,10 @@ class Mountaincar(Environment):
         if self._x >= 0.05:
             return True
         return False
+
+
+    def getDiscreteState(self, state):
+        discreteX = int(state[0] * pow(2, 6))
+        discreteV = int(state[1] * pow(2, 8))
+
+        return discreteX * pow(2, 6) + discreteV

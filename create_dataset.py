@@ -63,7 +63,8 @@ class Dataset:
 
 class Model:
 
-    def __init__(self, dataset, episodes, numStates, numActions, L):
+    def __init__(self, env, dataset, episodes, numStates, numActions, L):
+        self.env = env
         self.dataset = dataset
         self.numStates = numStates - 1
         self.numActions = numActions
@@ -88,7 +89,8 @@ class Model:
         for i in range(self.episodes):
             trajectoryLength = len(states[i])
             for j in range(trajectoryLength):
-                s = np.argmax(states[i][j])
+                # s = np.argmax(states[i][j])
+                s = self.env.getDiscreteState(states[i][j])
                 a = actions[i][j]
                 r = rewards[i][j]
                 if j == trajectoryLength - 1:
@@ -96,8 +98,8 @@ class Model:
                     # if sPrime ==0 :
                     #     print("s=",s,"a=",a,"sp",sPrime)
                 else:
-                    sPrime = np.argmax(states[i][j + 1])
-
+                    # sPrime = np.argmax(states[i][j + 1])
+                    sPrime = self.env.getDiscreteState(states[i][j + 1])
                 # print("state is", s, "action is", a, "sprime is", sPrime)
 
                 if j != self.L - 1:
@@ -111,7 +113,8 @@ class Model:
                 R[s][a][sPrime] += r
 
         for i in range(self.episodes):
-            d0[np.argmax(states[i][0])] += 1.0 / self.episodes
+            # d0[np.argmax(states[i][0])] += 1.0 / self.episodes
+            d0[self.env.getDiscreteState(states[i][0])] += 1.0 / self.episodes
 
         rMin = rewards[0][0]
         for i in range(self.episodes):

@@ -165,3 +165,7 @@ class Cartpole(Environment):
     @property
     def t(self):
         return self._t
+
+    def getDiscreteState(self, state):
+        raise NotImplementedError
+

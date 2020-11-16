@@ -106,6 +106,9 @@ class Gridworld(Environment):
     def R(self, state, action, nextState):
         return -1
 
+    def getDiscreteState(self, state):
+        return np.argmax(state)
+
 
 
 # def test():
