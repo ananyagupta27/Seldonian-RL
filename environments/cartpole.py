@@ -20,7 +20,7 @@ class Cartpole(Environment):
     Borrowed from Phil Thomas's RL course Fall 2019. Written by Blossom Metevier and Scott Jordan
     """
 
-    def __init__(self):
+    def __init__(self, discrete=False):
         self._name = "Cartpole"
         self.numActions = 2
         self._action = None
@@ -48,6 +48,8 @@ class Cartpole(Environment):
         self._l = 0.5  # (1/2) * pole length
         self._dt = 0.02  # timestep
         self._t = 0.0  # total time elapsed  NOTE: USE must use this variable
+
+        self.discrete = discrete
 
     @property
     def isEnd(self) -> bool:
@@ -78,6 +80,8 @@ class Cartpole(Environment):
         return self.numActions
 
     def getStateDims(self):
+        if self.discrete:
+            return self.getNumDiscreteStates()
         return 256
 
     def nextState(self, state: np.ndarray, action: int) -> np.ndarray:
@@ -168,4 +172,8 @@ class Cartpole(Environment):
 
     def getDiscreteState(self, state):
         raise NotImplementedError
+
+
+    def getNumDiscreteStates(self):
+        return NotImplementedError
 

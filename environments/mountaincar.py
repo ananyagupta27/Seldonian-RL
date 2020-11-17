@@ -20,7 +20,7 @@ class Mountaincar(Environment):
     Borrowed from Phil Thomas's RL course Fall 2019. Written by Blossom Metevier and Scott Jordan
     """
 
-    def __init__(self):
+    def __init__(self, discrete=False):
         self._name = "MountainCar"
         self.numActions = 3
         self._action = None
@@ -42,6 +42,7 @@ class Mountaincar(Environment):
         self._ucoef = 0.001  # gravity coeff
         self._h = 3.0  # cosine frequency parameter
         self._t = 0.0  # total time elapsed  NOTE: USE must use this variable
+        self.discrete = discrete
 
     @property
     def isEnd(self) -> bool:
@@ -58,7 +59,7 @@ class Mountaincar(Environment):
 
     @property
     def horizonLength(self):
-        return 5000
+        return 1000
 
     @property
     def threshold(self):
@@ -71,7 +72,13 @@ class Mountaincar(Environment):
         return self.numActions
 
     def getStateDims(self):
+        if self.discrete:
+            return self.getNumDiscreteStates()
         return 16
+
+
+    def getNumDiscreteStates(self):
+        return int((pow(2,4)+1) * (pow(2,6)+1))
 
     def nextState(self, state: np.ndarray, action: int) -> np.ndarray:
         """
@@ -131,7 +138,8 @@ class Mountaincar(Environment):
             pole falls |theta| > (pi/12.0)
             cart hits the sides |x| >= 3
         """
-        if self._t >= 5000:
+        # 5000
+        if self._t >= 1000:
             return True
         if self._x >= 0.05:
             return True
@@ -139,7 +147,22 @@ class Mountaincar(Environment):
 
 
     def getDiscreteState(self, state):
-        discreteX = int(state[0] * pow(2, 6))
-        discreteV = int(state[1] * pow(2, 8))
+        # print(state)
+        state = self.normalizeState(state)
+        discreteX = int(state[0] * pow(2, 4))
+        discreteV = int(state[1] * pow(2, 6))
+        # print(state, discreteX, discreteV, int(discreteX * pow(2, 4) + discreteV))
 
-        return discreteX * pow(2, 6) + discreteV
+        return int(discreteX * pow(2, 4) + discreteV)
+
+    def normalizeState(self, state):
+        for i, item in enumerate(self.observation_space.low):
+            if state[i] < self.observation_space.low[i]:
+                state[i] = self.observation_space.low[i]
+            elif state[i] > self.observation_space.high[i]:
+                state[i] = self.observation_space.high[i]
+        for i, _ in enumerate(range(2)):
+            state[i] = (state[i] - self.observation_space.low[i]) / (
+                    self.observation_space.high[i] - self.observation_space.low[i])
+        return state
+

@@ -96,3 +96,7 @@ class Environment(ABC):
     @abstractmethod
     def getDiscreteState(self, state):
         pass
+
+    @abstractmethod
+    def getNumDiscreteStates(self):
+        pass

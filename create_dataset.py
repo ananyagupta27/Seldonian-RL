@@ -123,6 +123,7 @@ class Model:
                 rMin = min(rewards[i][j], rMin)
 
         # Compute P and R
+        print("p and R")
         for s in range(self.numStates):
             for a in range(self.numActions):
                 for sPrime in range(self.numStates + 1):
@@ -138,6 +139,7 @@ class Model:
                     # print("s ", s, " a ", a, " sprime ", sPrime, "P", p[s][a][sPrime], " R ", R[s][a][sPrime])
         trajectories = {'states': states, 'actions': actions, 'rewards': rewards, 'pi_b': pi_b, 'p': p, 'R': R,
                         'd0': d0}
+        print("done modeling")
         return trajectories
 
 

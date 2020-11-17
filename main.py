@@ -186,7 +186,7 @@ def run_experiments(worker_id, nWorkers, ms, numM, numTrials, mTest, env, gHats,
     # np.random.seed((experiment_number + 1) * 9999)
 
     fHat = DR
-    print("simple importance sampling")
+    print("importance sampling")
     # fHat = total_return
 
 
@@ -197,14 +197,15 @@ def run_experiments(worker_id, nWorkers, ms, numM, numTrials, mTest, env, gHats,
             datasetGenerator = Dataset(m, env)
             theta = np.zeros((env.getStateDims(), env.getNumActions()))
             candidateDataset = datasetGenerator.generate_dataset(theta)
-            model = Model(env, candidateDataset, m, env.getStateDims(), env.getNumActions(), env.horizonLength)
+            model = Model(env, candidateDataset, m, env.getNumDiscreteStates(), env.getNumActions(), env.horizonLength)
             candidateDataset = model.makeMLEModel()
 
             theta = np.zeros((env.getStateDims(), env.getNumActions()))
             datasetGenerator = Dataset(m, env)
             safetyDataset = datasetGenerator.generate_dataset(theta)
-            model = Model(env, safetyDataset, m, env.getStateDims(), env.getNumActions(), env.horizonLength)
+            model = Model(env, safetyDataset, m, env.getNumDiscreteStates(), env.getNumActions(), env.horizonLength)
             safetyDataset = model.makeMLEModel()
+            print("starting")
 
             # dataset, episodes, numStates, numActions, L
 
@@ -275,7 +276,7 @@ def main():
     env_choice = param1
     print("Running environment ", env_choice, " Name ", env_map[env_choice])
     if env_choice == 0:
-        env = Mountaincar()
+        env = Mountaincar(discrete=True)
         gHats = [gHat1Mountaincar]
         deltas = [0.1]
     elif env_choice == 1:

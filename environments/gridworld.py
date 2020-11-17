@@ -8,7 +8,7 @@ from .environment import Environment
 
 
 class Gridworld(Environment):
-    def __init__(self, size=5, gamma=1):
+    def __init__(self, size=5, gamma=1, discrete=True):
         self.size = int(size)
         self.x = int(0)
         self.y = int(0)
@@ -22,6 +22,8 @@ class Gridworld(Environment):
         self._R = None
         self._gamma = gamma
         self.numActions = 4
+        self.discrete = discrete
+
 
 
     @property
@@ -53,6 +55,8 @@ class Gridworld(Environment):
         return self.numActions
 
     def getStateDims(self):
+        if self.discrete:
+            return self.getNumDiscreteStates()
         return self.size ** 2
 
     def reset(self):
@@ -109,7 +113,8 @@ class Gridworld(Environment):
     def getDiscreteState(self, state):
         return np.argmax(state)
 
-
+    def getNumDiscreteStates(self):
+        return self.getStateDims()
 
 # def test():
 #     env = Gridworld()

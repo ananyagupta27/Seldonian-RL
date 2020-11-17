@@ -10,7 +10,7 @@ from .environment import Environment
 class Gridworldv2(Environment):
 
 
-    def __init__(self, size=4, gamma=1, horizonLength=100):
+    def __init__(self, size=4, gamma=1, horizonLength=100, discrete=True):
         self.size = int(size)
         self._gamma = gamma
         self._horizonLength = horizonLength
@@ -21,6 +21,7 @@ class Gridworldv2(Environment):
         self.x = 0
         self.y = 0
         self.count = 0
+        self.discrete = discrete
 
 
     @property
@@ -50,6 +51,8 @@ class Gridworldv2(Environment):
 
 
     def getStateDims(self):
+        if self.discrete:
+            return self.getNumDiscreteStates()
         return self.numStates
 
 
@@ -102,6 +105,9 @@ class Gridworldv2(Environment):
 
     def getDiscreteState(self, state):
         return np.argmax(state)
+
+    def getNumDiscreteStates(self):
+        return self.getStateDims()
 
 
     def terminal(self):

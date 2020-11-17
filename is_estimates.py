@@ -207,7 +207,7 @@ def DR(theta, dataset, episodes, env):
 
 
 def loadEvalPolicy(pi_e, episodes, p, R, env):
-    numStates = env.getStateDims()
+    numStates = env.getNumDiscreteStates()
     numActions = env.getNumActions()
     actionProbabilities = np.zeros((numStates, numActions))
     L = env.horizonLength

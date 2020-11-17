@@ -66,8 +66,11 @@ def fourierBasis(state, order_list):
 
 
 def get_transformed_state(env, state, theta, order=3):
-    if type(env) is Gridworld or type(env) is Gridworldv2:
-        return state.reshape(-1,1)
+    if env.discrete:
+        state = env.getDiscreteState(state)
+        discreteState = np.zeros(env.getNumDiscreteStates(), dtype=np.float32)
+        discreteState[state] = 1
+        return discreteState.reshape(-1,1)
     state_copy = state.copy()
     for i, item in enumerate(env.observation_space.low):
         try:
