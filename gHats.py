@@ -17,6 +17,7 @@ def gHat2Gridworld(estimates):
 def gHatGridworldv2(estimates):
     return 30 - estimates
 
+
 def gHat1Mountaincar(estimates):
     # return 100 - estimates
     # return 150 - estimates

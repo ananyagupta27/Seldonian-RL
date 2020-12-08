@@ -18,8 +18,8 @@ class Gridworld(Environment):
         self.numa = 4
         self.observation_space = spaces.Box(low=np.zeros(nums), high=np.ones(nums), dtype=np.float32)
         self.action_space = spaces.Discrete(self.numa)
-        self._P = None
-        self._R = None
+        # self._P = None
+        # self._R = None
         self._gamma = gamma
         self.numActions = 4
         self.discrete = discrete
@@ -48,15 +48,13 @@ class Gridworld(Environment):
         """
         The threshold performance
         """
-        return -130
+        return -110
 
 
     def getNumActions(self):
         return self.numActions
 
     def getStateDims(self):
-        if self.discrete:
-            return self.getNumDiscreteStates()
         return self.size ** 2
 
     def reset(self):

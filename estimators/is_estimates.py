@@ -1,5 +1,4 @@
 import numpy as np
-from scipy.optimize import minimize
 # from scipy.stats import t
 import sys
 import os
@@ -9,16 +8,7 @@ np.seterr(all='raise')
 sys.path.insert(1, os.path.join(os.path.dirname(sys.path[0]), 'environments'))
 sys.path.insert(1, os.path.join(os.path.dirname(sys.path[0]), 'optimizers'))
 
-from environments.gridworld import Gridworld
-from environments.gridworldv2 import Gridworldv2
-from environments.cartpole import Cartpole
-from environments.mountaincar import Mountaincar
-
-from optimizers.cem import CEM
-from optimizers.powell import Powell
-from optimizers.cmaes import CMAES
 from helper import *
-from create_dataset import Dataset, Model
 
 
 # dataset = {'states': states, 'actions': actions, 'rewards': rewards, 'pi_b': pi_b}
@@ -40,25 +30,24 @@ def IS(theta, dataset, episodes, env):
         is_current = 0
 
         frac = 1
-        try:
-            for timestep in range(len(states[episode])):
-                s = states[episode][timestep]
-                a = actions[episode][timestep]
-                r = rewards[episode][timestep]
-                pi_b_cur = pi_b[episode][timestep]
 
-                G_h_l += r
+        for timestep in range(len(states[episode])):
+            s = states[episode][timestep]
+            a = actions[episode][timestep]
+            r = rewards[episode][timestep]
+            pi_b_cur = pi_b[episode][timestep]
 
-                s_transformed = get_transformed_state(env, s, theta)
-                pi_e = np.exp(np.dot(s_transformed.T, theta)) / np.sum(np.exp(np.dot(s_transformed.T, theta)))
+            G_h_l += r
 
-                frac *= pi_e[0][a] / pi_b_cur
+            s_transformed = get_transformed_state(env, s, theta)
+            pi_e = normalize(np.dot(s_transformed.T, theta))
+            # pi_e = np.exp(np.dot(s_transformed.T, theta)) / np.sum(np.exp(np.dot(s_transformed.T, theta)))
 
-            is_current = G_h_l * frac
+            frac *= pi_e[0][a] / pi_b_cur
 
-        except Exception as e:
-            print("error overflow", e)
-            continue
+        is_current = G_h_l * frac
+
+
         is_estimates.append(is_current)
     average_estimate = np.mean(is_estimates)
     # print(is_estimates)
@@ -73,6 +62,7 @@ def PDIS(theta, dataset, episodes, env):
 
     theta = theta.reshape(env.getStateDims(), env.getNumActions())
 
+
     is_estimates = []
     average_estimate = 0
 
@@ -80,24 +70,26 @@ def PDIS(theta, dataset, episodes, env):
 
         is_current = 0
         frac = 1
-        try:
-            for timestep in range(len(states[episode])):
-                s = states[episode][timestep]
-                a = actions[episode][timestep]
-                r = rewards[episode][timestep]
-                pi_b_cur = pi_b[episode][timestep]
 
-                s_transformed = get_transformed_state(env, s, theta)
-                pi_e = np.exp(np.dot(s_transformed.T, theta)) / np.sum(np.exp(np.dot(s_transformed.T, theta)))
+        for timestep in range(len(states[episode])):
+            s = states[episode][timestep]
+            a = actions[episode][timestep]
+            r = rewards[episode][timestep]
+            pi_b_cur = pi_b[episode][timestep]
 
+            s_transformed = get_transformed_state(env, s, theta)
+            # pi_e = np.exp(np.dot(s_transformed.T, theta)) / np.sum(np.exp(np.dot(s_transformed.T, theta)))
+            pi_e = normalize(np.dot(s_transformed.T, theta))
+            # print(s_transformed, pi_e[0][a], pi_e)
+            # exit(0)
+            try:
                 frac *= pi_e[0][a] / pi_b_cur
-
-                is_current += (env.gamma ** timestep) * (rewards[episode][timestep] * frac)
-        except Exception as e:
-            print("error overflow", e)
-            continue
+            except:
+                frac = 0
+                break
+            is_current += (env.gamma ** timestep) * (rewards[episode][timestep] * frac)
         is_estimates.append(is_current)
-    # print(is_estimates)
+    # print(np.mean(is_estimates))
     average_estimate = np.mean(is_estimates)
     return average_estimate, np.array(is_estimates)
 
@@ -119,33 +111,91 @@ def WIS(theta, dataset, episodes, env):
         is_current = 0
 
         frac = 1
-        try:
-            for timestep in range(len(states[episode])):
-                s = states[episode][timestep]
-                a = actions[episode][timestep]
-                r = rewards[episode][timestep]
-                pi_b_cur = pi_b[episode][timestep]
+        for timestep in range(len(states[episode])):
+            s = states[episode][timestep]
+            a = actions[episode][timestep]
+            r = rewards[episode][timestep]
+            pi_b_cur = pi_b[episode][timestep]
 
-                G_h_l += r
+            G_h_l += r
 
-                s_transformed = get_transformed_state(env, s, theta)
-                pi_e = np.exp(np.dot(s_transformed.T, theta)) / np.sum(np.exp(np.dot(s_transformed.T, theta)))
+            s_transformed = get_transformed_state(env, s, theta)
+            # pi_e = np.exp(np.dot(s_transformed.T, theta)) / np.sum(np.exp(np.dot(s_transformed.T, theta)))
+            pi_e = normalize(np.dot(s_transformed.T, theta))
+            frac *= pi_e[0][a] / pi_b_cur
 
-                frac *= pi_e[0][a] / pi_b_cur
+        is_current = G_h_l * frac
+        norm += frac
 
-            is_current = G_h_l * frac
-            norm += frac
-        except Exception as e:
-            print("Exception Overflow", e)
-            continue
         is_estimates.append(is_current)
     is_estimates = is_estimates * episodes / norm
     average_estimate = np.mean(is_estimates)
-    # print(is_estimates)
+    print(np.mean(is_estimates))
     return average_estimate, np.array(is_estimates)
 
 
 def DR(theta, dataset, episodes, env):
+    states = dataset['states']
+    actions = dataset['actions']
+    rewards = dataset['rewards']
+    pi_b = dataset['pi_b']
+    p = dataset['p']
+    R = dataset['R']
+
+    theta = theta.reshape(env.getStateDims(), env.getNumActions())
+    max_exp = np.max(theta, axis=1).reshape(theta.shape[0], 1)
+    pi_theta = np.exp(theta - max_exp) / np.sum(np.exp(theta - max_exp), axis=1).reshape(env.getStateDims(), 1)
+    # print(pi_theta)
+    Q, V = loadEvalPolicy(pi_theta, episodes, p, R, env)
+    # print(Q.shape, V.shape)
+    is_estimates = []
+    average_estimate = 0
+
+    # s_transformed = get_transformed_state(env, s, theta)
+    # pi_e = np.exp(np.dot(s_transformed.T, theta)) / np.sum(np.exp(np.dot(s_transformed.T, theta)))
+
+    L = 0
+    for i in range(episodes):
+        L = max(L, len(states[i]))
+
+    rho = np.zeros((L, episodes))
+    pi_e = [[] for _ in range(episodes)]
+
+    for i in range(episodes):
+        for timestep in range(len(states[i])):
+            s_transformed = get_transformed_state(env, states[i][timestep], theta)
+            pi = np.exp(np.dot(s_transformed.T, theta)) / np.sum(np.exp(np.dot(s_transformed.T, theta)))
+            pi_e[i].append(pi[0][actions[i][timestep]])
+
+    for i in range(episodes):
+        rho[0][i] = pi_e[i][0] / pi_b[i][0]
+
+    for timestep in range(1, L):
+        for i in range(episodes):
+            rho[timestep][i] = rho[timestep - 1][i] * (pi_e[i][timestep] / pi_b[i][timestep]) if timestep < len(
+                states[i]) else rho[timestep - 1][i]
+
+    gamma = env.gamma
+    for i in range(episodes):
+        is_current = 0
+        curGamma = 1
+        for timestep in range(min(L, len(states[i]))):
+            is_current += curGamma * rho[timestep][i] * rewards[i][timestep]
+            weightV = 1 if timestep == 0 else rho[timestep - 1][i]
+            weightQ = rho[timestep - 1][i]
+            # is_current -= curGamma * (weightQ * Q[0][np.argmax(states[i][timestep])][actions[i][timestep]] - weightV
+            #                           * V[0][np.argmax(states[i][timestep])])
+            is_current -= curGamma * (
+                    weightQ * Q[0][env.getDiscreteState(states[i][timestep])][actions[i][timestep]] - weightV
+                    * V[0][env.getDiscreteState(states[i][timestep])])
+            curGamma *= gamma
+        is_estimates.append(is_current)
+    # print(is_estimates)
+    average_estimate = np.mean(is_estimates)
+    return average_estimate, np.array(is_estimates)
+
+
+def DR_hat(theta, dataset, episodes, env):
     states = dataset['states']
     actions = dataset['actions']
     rewards = dataset['rewards']

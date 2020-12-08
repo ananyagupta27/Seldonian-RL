@@ -66,14 +66,14 @@ class Cartpole(Environment):
 
     @property
     def horizonLength(self):
-        return 2000
+        return 1000
 
     @property
     def threshold(self):
         """
         The threshold performance
         """
-        return 170
+        return 192
 
 
     def getNumActions(self):
@@ -177,3 +177,34 @@ class Cartpole(Environment):
     def getNumDiscreteStates(self):
         return NotImplementedError
 
+    def normalizeStates(self, state):
+        for i, _ in enumerate(range(4)):
+            state[i] = (state[i] - self.observation_space.low[i]) / (
+                    self.observation_space.high[i] - self.observation_space.low[i])
+        return state
+
+
+def test():
+    env = Cartpole()
+    avr = 0
+    for i in range(1000):
+        G = 0
+        env.reset()
+        t = 0
+        while True:
+            a = np.random.choice(2, 1)
+            s, r, isEnd = env.step(a)
+            # print(s, r, isEnd)
+            G += (env.gamma ** t) * r
+
+            if isEnd:
+                break
+
+            t += 1
+        print("episode=", i, " G", G, " t=", t, "count", t)
+        avr += G
+    print(avr / 1000, "avr")
+
+
+if __name__ == "__main__":
+    test()

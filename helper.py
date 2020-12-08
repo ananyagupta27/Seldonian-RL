@@ -8,7 +8,7 @@ import os
 sys.path.insert(1, os.path.join(os.path.dirname(sys.path[0]), 'environments'))
 sys.path.insert(1, os.path.join(os.path.dirname(sys.path[0]), 'optimizers'))
 
-from environments.gridworld import Gridworld
+from environments.gridworldv1 import Gridworld
 from environments.gridworldv2 import Gridworldv2
 from environments.cartpole import Cartpole
 
@@ -49,6 +49,14 @@ def predictTTestUpperBound(v, delta, k):
     # conservative prediction of what the upper bound will be in the safety test for the a given constraint
     res = v.mean() + 2.0 * stddev(v) / math.sqrt(k) * tinv(1.0 - delta, k - 1)
     return res
+
+
+def normalize(theta, axis=1):
+    STATES = theta.shape[0]
+    theta = theta - np.max(theta, axis=axis).reshape(STATES, 1)
+    theta = np.exp(theta)
+    norm_theta = np.sum(theta, axis=axis)
+    return theta / norm_theta.reshape(STATES, 1)
 
 
 def getCountlist(number_of_states , order):

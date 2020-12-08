@@ -1,64 +1,4 @@
 import numpy as np
-from helper import *
-import sys
-import os
-
-sys.path.insert(1, os.path.join(os.path.dirname(sys.path[0]), 'environments'))
-sys.path.insert(1, os.path.join(os.path.dirname(sys.path[0]), 'optimizers'))
-
-from environments.gridworld import Gridworld
-from environments.gridworldv2 import Gridworldv2
-from environments.cartpole import Cartpole
-from environments.mountaincar import Mountaincar
-
-
-class Dataset:
-
-    def __init__(self, episodes, env):
-        self.env = env
-        self.episodes = episodes
-
-    def generate_dataset(self, theta):
-        choices = self.env.getNumActions()
-        N = self.episodes
-        theta = theta.reshape(-1, choices)
-        states = [[] for _ in range(N)]
-        actions = [[] for _ in range(N)]
-        rewards = [[] for _ in range(N)]
-        pi_b = [[] for _ in range(N)]
-        ended = False
-
-        for i in range(N):
-            self.env.reset()
-            s = self.env.state
-            while True:
-                states[i].append(s)
-
-                s_transformed = get_transformed_state(self.env, s, theta)
-                pi = np.exp(np.dot(s_transformed.T, theta)) / np.sum(np.exp(np.dot(s_transformed.T, theta)))
-
-
-                a = get_action(pi)
-                pi_b[i].append(pi[0][a])
-                actions[i].append(a)
-
-                if type(self.env) is Mountaincar:
-                    r = 0
-                    for _ in range(5):
-                        _, r, ended = self.env.step(a)
-                    rewards[i].append(5 * r)
-                else:
-                    _, r, ended = self.env.step(a)
-                    rewards[i].append(r)
-
-                if ended:
-                    break
-                s_prime = self.env.state
-                s = s_prime
-        dataset = {'states': states, 'actions': actions, 'rewards': rewards, 'pi_b': pi_b}
-
-        return dataset
-
 
 
 class Model:
@@ -102,7 +42,7 @@ class Model:
                     sPrime = self.env.getDiscreteState(states[i][j + 1])
                 # print("state is", s, "action is", a, "sprime is", sPrime)
 
-                if j != self.L - 1:
+                if j != trajectoryLength - 1:
                     stateActionStateCounts[s][a][sPrime] += 1
                     stateActionCounts[s][a] += 1
                 else:
@@ -141,17 +81,3 @@ class Model:
                         'd0': d0}
         print("done modeling")
         return trajectories
-
-
-def test():
-    env = Gridworldv2()
-    data = Dataset(20, env)
-    dataset = data.generate_dataset(np.zeros((16, 4)))
-    print(dataset)
-    model = Model(dataset, 20, 16, 4, 100)
-    model.makeMLEModel()
-
-
-
-if __name__ == "__main__":
-    test()

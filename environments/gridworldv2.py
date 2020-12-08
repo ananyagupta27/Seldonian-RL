@@ -51,8 +51,6 @@ class Gridworldv2(Environment):
 
 
     def getStateDims(self):
-        if self.discrete:
-            return self.getNumDiscreteStates()
         return self.numStates
 
 

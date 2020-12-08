@@ -82,25 +82,26 @@ class CEM(Optimizer):
 
 
 def main():
-    episodes = int(sys.argv[1])
-    for _ in range(10):
-        theta = np.zeros((256 * 2))
+    pass
+    # episodes = int(sys.argv[1])
+    # for _ in range(10):
+    #     theta = np.zeros((256 * 2))
         #     theta = np.zeros((25, 4))
-        evaluationFunction = CandidateCartpolePDIS
-        cem = CEM(theta, evaluationFunction)
-        # print(evaluationFunction(cmaes.generation_loop()))
-        for it in range(1000):
-            x_min = cem.run_optimizer(episodes)
-
-            # if it % 100 == 0:
-            #     print("episodes", episodes)
-            #     # print("x_min:=", x_min)
-            #     print("f_min:=", CandidateCartpolePDIS(x_min, episodes, multiplier=1))
-            #     sys.stdout.flush()
-        print("--------------------------")
-        print("x_min:=", x_min)
-        print("f_min:=", evaluationFunction(x_min, episodes, multiplier=1))
-        sys.stdout.flush()
+        # evaluationFunction = CandidateCartpolePDIS
+        # cem = CEM(theta, evaluationFunction)
+        # # print(evaluationFunction(cmaes.generation_loop()))
+        # for it in range(1000):
+        #     x_min = cem.run_optimizer(episodes)
+        #
+        #     # if it % 100 == 0:
+        #     #     print("episodes", episodes)
+        #     #     # print("x_min:=", x_min)
+        #     #     print("f_min:=", CandidateCartpolePDIS(x_min, episodes, multiplier=1))
+        #     #     sys.stdout.flush()
+        # print("--------------------------")
+        # print("x_min:=", x_min)
+        # print("f_min:=", evaluationFunction(x_min, episodes, multiplier=1))
+        # sys.stdout.flush()
     # # cmaes = CEM(np.zeros((12, 1)), func)
     # episodes = int(sys.argv[1])
     # for _ in range(10):

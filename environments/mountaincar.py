@@ -66,7 +66,7 @@ class Mountaincar(Environment):
         """
         The threshold performance
         """
-        return 150
+        return 58.5
 
     def getNumActions(self):
         return self.numActions
@@ -78,7 +78,7 @@ class Mountaincar(Environment):
 
 
     def getNumDiscreteStates(self):
-        return int((pow(2,4)+1) * (pow(2,6)+1))
+        return int((pow(2,4)+1) * (pow(2,4)+1))
 
     def nextState(self, state: np.ndarray, action: int) -> np.ndarray:
         """
@@ -91,18 +91,20 @@ class Mountaincar(Environment):
         x += v
 
         state = np.array([x, v])
-        for i, item in enumerate(self.observation_space.low):
-            if state[i] < self.observation_space.low[i]:
-                state[i] = self.observation_space.low[i]
-            elif state[i] > self.observation_space.high[i]:
-                state[i] = self.observation_space.high[i]
+
+        if state[0] < self.observation_space.low[0]:
+            state[0] = self.observation_space.low[0]
+            state[1] = 0
+        elif state[0] > self.observation_space.high[0]:
+            state[0] = self.observation_space.high[0]
+
         return state
 
     def R(self, state: np.ndarray, action: int, next_state: np.ndarray) -> float:
         """
         returns a reward for the transition (state,action,next_state)
         """
-        if self.terminal():
+        if self.terminal() and self._x >= 0.05:
             return 200
         return -1.0
 
@@ -150,7 +152,7 @@ class Mountaincar(Environment):
         # print(state)
         state = self.normalizeState(state)
         discreteX = int(state[0] * pow(2, 4))
-        discreteV = int(state[1] * pow(2, 6))
+        discreteV = int(state[1] * pow(2, 4))
         # print(state, discreteX, discreteV, int(discreteX * pow(2, 4) + discreteV))
 
         return int(discreteX * pow(2, 4) + discreteV)
@@ -161,8 +163,39 @@ class Mountaincar(Environment):
                 state[i] = self.observation_space.low[i]
             elif state[i] > self.observation_space.high[i]:
                 state[i] = self.observation_space.high[i]
+
         for i, _ in enumerate(range(2)):
             state[i] = (state[i] - self.observation_space.low[i]) / (
                     self.observation_space.high[i] - self.observation_space.low[i])
         return state
 
+
+def test():
+    env = Mountaincar()
+    avr = 0
+    for i in range(1000):
+        G = 0
+        env.reset()
+        t = 0
+        while True:
+            a = np.random.choice(3, 1)
+
+            r = 0
+            for _ in range(5):
+                s, r, isEnd = env.step(a)
+            r = r*5
+            # s, r, isEnd = env.step(a)
+            # print(s, r, isEnd)
+            G += (env.gamma ** t) * r
+
+            if isEnd:
+                break
+
+            t += 1
+        print("episode=", i, " G", G, " t=", t, "count", t)
+        avr += G
+    print(avr / 1000, "avr")
+
+
+if __name__ == "__main__":
+    test()
