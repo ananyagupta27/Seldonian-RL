@@ -53,23 +53,25 @@ def IS(theta, dataset, episodes, env):
     # print(is_estimates)
     return average_estimate, np.array(is_estimates)
 
-
 def PDIS(theta, dataset, episodes, env):
+    theta = theta.reshape(env.getStateDims(), env.getNumActions())
+    # print(theta)
     states = dataset['states']
     actions = dataset['actions']
     rewards = dataset['rewards']
     pi_b = dataset['pi_b']
 
-    theta = theta.reshape(env.getStateDims(), env.getNumActions())
-
-
     is_estimates = []
     average_estimate = 0
 
+
     for episode in range(episodes):
 
+        G_h_l = 0
         is_current = 0
-        frac = 1
+        num = 1
+        den = 1
+        # frac= 1
 
         for timestep in range(len(states[episode])):
             s = states[episode][timestep]
@@ -77,21 +79,60 @@ def PDIS(theta, dataset, episodes, env):
             r = rewards[episode][timestep]
             pi_b_cur = pi_b[episode][timestep]
 
+            G_h_l += r
+
             s_transformed = get_transformed_state(env, s, theta)
-            # pi_e = np.exp(np.dot(s_transformed.T, theta)) / np.sum(np.exp(np.dot(s_transformed.T, theta)))
-            pi_e = normalize(np.dot(s_transformed.T, theta))
-            # print(s_transformed, pi_e[0][a], pi_e)
-            # exit(0)
+            pi_e = np.exp(np.dot(s_transformed.T, theta)) / np.sum(np.exp(np.dot(s_transformed.T, theta)))
             try:
-                frac *= pi_e[0][a] / pi_b_cur
+                num *= pi_e[0][a]
+                den *= pi_b_cur
+                # frac *= pi_e[0][a] / pi_b_cur[0][a]
+
+                is_current += (env.gamma**timestep) * (rewards[episode][timestep] * (num / den))
             except:
-                frac = 0
                 break
-            is_current += (env.gamma ** timestep) * (rewards[episode][timestep] * frac)
         is_estimates.append(is_current)
-    # print(np.mean(is_estimates))
     average_estimate = np.mean(is_estimates)
+    print(average_estimate)
+    sys.stdout.flush()
+    #exit(0)
     return average_estimate, np.array(is_estimates)
+
+# def PDIS(theta, dataset, episodes, env):
+#     states = dataset['states']
+#     actions = dataset['actions']
+#     rewards = dataset['rewards']
+#     pi_b = dataset['pi_b']
+#
+#     theta = theta.reshape(env.getStateDims(), env.getNumActions())
+#
+#
+#     is_estimates = []
+#     average_estimate = 0
+#
+#     for episode in range(episodes):
+#
+#         is_current = 0
+#         frac = 1
+#         try:
+#             for timestep in range(len(states[episode])):
+#                 s = states[episode][timestep]
+#                 a = actions[episode][timestep]
+#                 r = rewards[episode][timestep]
+#                 pi_b_cur = pi_b[episode][timestep]
+#
+#                 s_transformed = get_transformed_state(env, s, theta)
+#                 pi_e = normalize(np.dot(s_transformed.T, theta))
+#
+#                 frac *= pi_e[0][a] / pi_b_cur
+#             is_current += (env.gamma ** timestep) * (rewards[episode][timestep] * frac)
+#         except:
+#             continue
+#
+#         is_estimates.append(is_current)
+#     # print(np.mean(is_estimates))
+#     average_estimate = np.mean(is_estimates)
+#     return average_estimate, np.array(is_estimates)
 
 
 def WIS(theta, dataset, episodes, env):
@@ -120,7 +161,6 @@ def WIS(theta, dataset, episodes, env):
             G_h_l += r
 
             s_transformed = get_transformed_state(env, s, theta)
-            # pi_e = np.exp(np.dot(s_transformed.T, theta)) / np.sum(np.exp(np.dot(s_transformed.T, theta)))
             pi_e = normalize(np.dot(s_transformed.T, theta))
             frac *= pi_e[0][a] / pi_b_cur
 
@@ -130,7 +170,7 @@ def WIS(theta, dataset, episodes, env):
         is_estimates.append(is_current)
     is_estimates = is_estimates * episodes / norm
     average_estimate = np.mean(is_estimates)
-    print(np.mean(is_estimates))
+    # print(np.mean(is_estimates))
     return average_estimate, np.array(is_estimates)
 
 
@@ -183,8 +223,6 @@ def DR(theta, dataset, episodes, env):
             is_current += curGamma * rho[timestep][i] * rewards[i][timestep]
             weightV = 1 if timestep == 0 else rho[timestep - 1][i]
             weightQ = rho[timestep - 1][i]
-            # is_current -= curGamma * (weightQ * Q[0][np.argmax(states[i][timestep])][actions[i][timestep]] - weightV
-            #                           * V[0][np.argmax(states[i][timestep])])
             is_current -= curGamma * (
                     weightQ * Q[0][env.getDiscreteState(states[i][timestep])][actions[i][timestep]] - weightV
                     * V[0][env.getDiscreteState(states[i][timestep])])
@@ -200,14 +238,15 @@ def DR_hat(theta, dataset, episodes, env):
     actions = dataset['actions']
     rewards = dataset['rewards']
     pi_b = dataset['pi_b']
-    p = dataset['p']
-    R = dataset['R']
-
+    # p = dataset['p']
+    # R = dataset['R']
+    Q = dataset['Q']
+    V = dataset['V']
     theta = theta.reshape(env.getStateDims(), env.getNumActions())
     max_exp = np.max(theta, axis=1).reshape(theta.shape[0], 1)
     pi_theta = np.exp(theta - max_exp) / np.sum(np.exp(theta - max_exp), axis=1).reshape(env.getStateDims(), 1)
     # print(pi_theta)
-    Q, V = loadEvalPolicy(pi_theta, episodes, p, R, env)
+    # Q, V = loadEvalPolicy(pi_theta, episodes, p, R, env)
     # print(Q.shape, V.shape)
     is_estimates = []
     average_estimate = 0
@@ -269,6 +308,7 @@ def loadEvalPolicy(pi_e, episodes, p, R, env):
 
     Q = np.zeros((L, numStates + 1, numActions))
     V = np.zeros((L, numStates + 1))
+    # print(L,"L",numStates,numActions)
 
     for t in range(L - 1, -1, -1):
         for s in range(numStates):

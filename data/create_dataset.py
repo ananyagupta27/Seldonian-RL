@@ -41,9 +41,9 @@ class Dataset:
 
                 if type(self.env) is Mountaincar:
                     r = 0
-                    for _ in range(5):
+                    for _ in range(4):
                         _, r, ended = self.env.step(a)
-                    rewards[i].append(5 * r)
+                    rewards[i].append(4 * r)
                 else:
                     _, r, ended = self.env.step(a)
                     rewards[i].append(r)

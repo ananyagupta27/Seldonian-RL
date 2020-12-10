@@ -73,7 +73,7 @@ class Cartpole(Environment):
         """
         The threshold performance
         """
-        return 192
+        return 182.0
 
 
     def getNumActions(self):
@@ -175,7 +175,7 @@ class Cartpole(Environment):
 
 
     def getNumDiscreteStates(self):
-        return NotImplementedError
+        raise NotImplementedError
 
     def normalizeStates(self, state):
         for i, _ in enumerate(range(4)):

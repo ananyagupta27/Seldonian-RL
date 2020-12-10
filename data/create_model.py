@@ -1,5 +1,5 @@
 import numpy as np
-
+from helper import *
 
 class Model:
 
@@ -10,6 +10,7 @@ class Model:
         self.numActions = numActions
         self.L = L
         self.episodes = episodes
+        self.pi = normalize(np.ones((env.getNumDiscreteStates(), env.getNumActions())))
 
     def makeMLEModel(self):
         states = self.dataset['states']
@@ -77,7 +78,45 @@ class Model:
                     else:
                         R[s][a][sPrime] /= stateActionStateCounts[s][a][sPrime]
                     # print("s ", s, " a ", a, " sprime ", sPrime, "P", p[s][a][sPrime], " R ", R[s][a][sPrime])
+        Q, V = self.calculateValueFunctions(p, R, self.env)
         trajectories = {'states': states, 'actions': actions, 'rewards': rewards, 'pi_b': pi_b, 'p': p, 'R': R,
-                        'd0': d0}
+                        'd0': d0, 'V':V, 'Q':Q}
         print("done modeling")
         return trajectories
+
+    def calculateValueFunctions(self, p, R, env):
+        pi = self.pi
+        numStates = env.getNumDiscreteStates()
+        numActions = env.getNumActions()
+        actionProbabilities = np.zeros((numStates, numActions))
+        L = env.horizonLength
+
+        numStates -= 1
+
+        for s in range(numStates):
+            actionProbabilities[s] = pi[s]
+
+        Q = np.zeros((L, numStates + 1, numActions))
+        V = np.zeros((L, numStates + 1))
+        print(L, "L", numStates, numActions)
+
+        for t in range(L - 1, -1, -1):
+            for s in range(numStates):
+                for a in range(numActions):
+                    for sPrime in range(numStates + 1):
+                        Q[t][s][a] += p[s][a][sPrime] * R[s][a][sPrime]
+                        if sPrime != numStates and t != L - 1:
+                            Q[t][s][a] += p[s][a][sPrime] * np.dot(actionProbabilities[sPrime], (Q[t + 1][sPrime]))
+
+        for t in range(L):
+            for s in range(numStates):
+                V[t][s] = np.dot(actionProbabilities[s], (Q[t][s]))
+
+        # for s in range(numStates):
+        #     print("state:", s, " value func:", V[0][s])
+        #
+        # for s in range(numStates):
+        #     for a in range(4):
+        #         print("action q function", s, " ", a, " ", Q[0][s][a])
+        print("calculated value functions")
+        return Q, V

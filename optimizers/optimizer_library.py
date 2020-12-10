@@ -54,7 +54,7 @@ class BFGS(Optimizer):
     def run_optimizer(self, verbose=True) -> np.ndarray:
         # Chooses the black-box optimizer we will use (Powell)
         minimizer_method = 'BFGS'
-        minimizer_options = {'disp': True, 'maxfev': 1000, 'maxiter':1000}
+        minimizer_options = {'disp': True, 'maxfev': 5, 'maxiter':5}
 
         # Use Powell to get a candidate solution that tries to maximize candidateObjective
         res = minimize(self.evaluationFunction, x0=self.theta, method=minimizer_method, options=minimizer_options, tol=0.001)
@@ -73,7 +73,7 @@ class CMA(Optimizer):
         self.theta = theta
         self.evaluationFunction = evaluationFunction
         self.sigma = 0.5
-        self.iterations = 5
+        self.iterations = 10
         print(self.name)
 
 

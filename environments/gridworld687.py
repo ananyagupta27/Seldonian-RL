@@ -17,6 +17,7 @@ class Gridworld687(Environment):
         self.numActions = 4
         self.observation_space = spaces.Box(low=np.zeros(self.numActions), high=np.ones(self.numActions),
                                             dtype=np.float32)
+
         self.action_space = spaces.Discrete(self.numActions)
         self.x = 0
         self.y = 0

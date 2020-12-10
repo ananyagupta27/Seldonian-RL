@@ -59,14 +59,15 @@ class Mountaincar(Environment):
 
     @property
     def horizonLength(self):
-        return 1000
+        return 100
 
     @property
     def threshold(self):
         """
         The threshold performance
         """
-        return 58.5
+        # return 58.5
+        return -390
 
     def getNumActions(self):
         return self.numActions
@@ -78,7 +79,7 @@ class Mountaincar(Environment):
 
 
     def getNumDiscreteStates(self):
-        return int((pow(2,4)+1) * (pow(2,4)+1))
+        return int((pow(2,3)+1) * (pow(2,4)+1))
 
     def nextState(self, state: np.ndarray, action: int) -> np.ndarray:
         """
@@ -104,8 +105,8 @@ class Mountaincar(Environment):
         """
         returns a reward for the transition (state,action,next_state)
         """
-        if self.terminal() and self._x >= 0.05:
-            return 200
+        # if self.terminal() and self._x >= 0.05:
+        #     return 200
         return -1.0
 
     def step(self, action: int) -> Tuple[np.ndarray, float, bool]:
@@ -141,7 +142,7 @@ class Mountaincar(Environment):
             cart hits the sides |x| >= 3
         """
         # 5000
-        if self._t >= 1000:
+        if self._t >= 400:
             return True
         if self._x >= 0.05:
             return True
@@ -151,7 +152,7 @@ class Mountaincar(Environment):
     def getDiscreteState(self, state):
         # print(state)
         state = self.normalizeState(state)
-        discreteX = int(state[0] * pow(2, 4))
+        discreteX = int(state[0] * pow(2, 3))
         discreteV = int(state[1] * pow(2, 4))
         # print(state, discreteX, discreteV, int(discreteX * pow(2, 4) + discreteV))
 
@@ -181,9 +182,9 @@ def test():
             a = np.random.choice(3, 1)
 
             r = 0
-            for _ in range(5):
+            for _ in range(4):
                 s, r, isEnd = env.step(a)
-            r = r*5
+            r = r*4
             # s, r, isEnd = env.step(a)
             # print(s, r, isEnd)
             G += (env.gamma ** t) * r

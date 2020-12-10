@@ -17,7 +17,8 @@ from data.create_model import Model
 from gHats import *
 
 # param1 = int(sys.argv[1])
-param1 = 3
+param1 = 0
+discrete = 1
 
 bin_path = 'experiment_results/bin/'
 # BENCHMARK_PERFORMANCE = 10
@@ -88,7 +89,7 @@ class QSA:
         """
         # theta = np.zeros((256 * 2))
         theta = np.zeros((self.env.getStateDims() * self.env.getNumActions()))
-        optimizer = Powell(theta, self.candidateObjective)
+        optimizer = CMA(theta, self.candidateObjective)
         xMin = optimizer.run_optimizer()
         return xMin
 
@@ -139,7 +140,7 @@ def run_experiments(worker_id, nWorkers, ms, numM, numTrials, mTest, env, gHats,
     # Generate the data used to evaluate the primary objective and failure rates
     # np.random.seed((experiment_number + 1) * 9999)
 
-    fHat = PDIS
+    fHat = DR_hat
     print("importance sampling")
     # fHat = total_return
 
@@ -151,14 +152,16 @@ def run_experiments(worker_id, nWorkers, ms, numM, numTrials, mTest, env, gHats,
             datasetGenerator = Dataset(m, env)
             theta = np.zeros((env.getStateDims(), env.getNumActions()))
             candidateDataset = datasetGenerator.generate_dataset(theta)
-            # model = Model(env, candidateDataset, m, env.getNumDiscreteStates(), env.getNumActions(), env.horizonLength)
-            # candidateDataset = model.makeMLEModel()
+            if discrete:
+                model = Model(env, candidateDataset, m, env.getNumDiscreteStates(), env.getNumActions(), env.horizonLength)
+                candidateDataset = model.makeMLEModel()
 
             theta = np.zeros((env.getStateDims(), env.getNumActions()))
             datasetGenerator = Dataset(m, env)
             safetyDataset = datasetGenerator.generate_dataset(theta)
-            # model = Model(env, safetyDataset, m, env.getNumDiscreteStates(), env.getNumActions(), env.horizonLength)
-            # safetyDataset = model.makeMLEModel()
+            if discrete:
+                model = Model(env, safetyDataset, m, env.getNumDiscreteStates(), env.getNumActions(), env.horizonLength)
+                safetyDataset = model.makeMLEModel()
             print("starting")
 
             # dataset, episodes, numStates, numActions, L
@@ -197,20 +200,20 @@ def run_experiments(worker_id, nWorkers, ms, numM, numTrials, mTest, env, gHats,
                 print(
                     f"[(worker {worker_id}/{nWorkers}) Seldonian trial {trial + 1}/{numTrials}, m {m}] No solution found",lb)
 
-            theta = np.zeros((env.getStateDims() * env.getNumActions()))
-            optimizer = Powell(theta, qsa.objectiveWithoutConstraints)
-            xMin = optimizer.run_optimizer()
-
-            # # Run the Least Squares algorithm
-            # theta = leastSq(trainX, trainY)  # Run least squares linear regression
-            trueEstimate, totalEstimates = qsa.fHat(xMin, safetyDataset, m, env)  # Get the "true" mean squared error using the testData
-            LS_failures_g1[
-                trial, mIndex] = 1 if trueEstimate < env.threshold else 0  # Check if the first behavioral constraint was violated
-            # LS_failures_g2[
-            #     trial, mIndex] = 1 if trueEstimate < 1.25 else 0  # Check if the second behavioral constraint was violated
-            LS_fs[trial, mIndex] = trueEstimate  # Store the "true" negative mean-squared error
-            print(
-                f"[(worker {worker_id}/{nWorkers}) LeastSq   trial {trial + 1}/{numTrials}, m {m}] LS fHat over test data: {trueEstimate:.10f}")
+            # theta = np.zeros((env.getStateDims() * env.getNumActions()))
+            # optimizer = CMA(theta, qsa.objectiveWithoutConstraints)
+            # xMin = optimizer.run_optimizer()
+            #
+            # # # Run the Least Squares algorithm
+            # # theta = leastSq(trainX, trainY)  # Run least squares linear regression
+            # trueEstimate, totalEstimates = qsa.fHat(xMin, safetyDataset, m, env)  # Get the "true" mean squared error using the testData
+            # LS_failures_g1[
+            #     trial, mIndex] = 1 if trueEstimate < env.threshold else 0  # Check if the first behavioral constraint was violated
+            # # LS_failures_g2[
+            # #     trial, mIndex] = 1 if trueEstimate < 1.25 else 0  # Check if the second behavioral constraint was violated
+            # LS_fs[trial, mIndex] = trueEstimate  # Store the "true" negative mean-squared error
+            # print(
+            #     f"[(worker {worker_id}/{nWorkers}) LeastSq   trial {trial + 1}/{numTrials}, m {m}] LS fHat over test data: {trueEstimate:.10f}")
         print()
 
     np.savez(outputFile,
@@ -230,7 +233,7 @@ def main():
     env_choice = param1
     print("Running environment ", env_choice, " Name ", env_map[env_choice])
     if env_choice == 0:
-        env = Mountaincar()
+        env = Mountaincar(discrete=True)
         gHats = [gHat1Mountaincar]
         deltas = [0.1]
     elif env_choice == 1:
