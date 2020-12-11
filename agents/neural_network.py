@@ -2,7 +2,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-
+"""
+Function approximator that maps states to actions 
+Simple neural network
+"""
 class Net(nn.Module):
 
     def __init__(self, states, actions):
@@ -21,8 +24,6 @@ class Net(nn.Module):
         x = F.relu(self.fc3(x))
         out = self.fc4(x)
         out = torch.nn.functional.softmax(out, dim=1)
-
-#         out = torch.reshape(out, (episodes, horizon_length, -1))
         out = out.view(episodes, horizon_length, -1)
         return out
 
@@ -34,5 +35,8 @@ class Net(nn.Module):
         return num_features
 
 
-net = Net(1, 4)
-print(net)
+
+
+
+
+
