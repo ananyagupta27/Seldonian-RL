@@ -13,7 +13,7 @@ Actions fail with 0.1 probability otherwise succeed
 """
 
 
-class Gridworld(Environment):
+class Gridworldv1(Environment):
     def __init__(self, size=5, gamma=1, discrete=True):
         self.size = int(size)
         self.x = int(0)

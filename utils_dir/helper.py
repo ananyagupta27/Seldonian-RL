@@ -50,6 +50,8 @@ def predictTTestUpperBound(v, delta, k):
     return res
 
 
+# function that takes softmax taking care of numerical overflows
+# https://stackoverflow.com/questions/34968722/how-to-implement-the-softmax-function-in-python
 def normalize(theta, axis=1):
     STATES = theta.shape[0]
     theta = theta - np.max(theta, axis=axis).reshape(STATES, 1)
@@ -58,11 +60,12 @@ def normalize(theta, axis=1):
     return theta / norm_theta.reshape(STATES, 1)
 
 
-def get_action(actPr):
-    actions = actPr.shape[1]
+# get action give action probabilities by sampling from uniform random distribution
+# and selecting according to the range
+def get_action(actPr, axis=1):
+    actions = actPr.shape[axis]
     temp = np.random.uniform(0, 1)
     sum_pr = 0
-    # print(actPr, actions)
 
     for i in range(actions):
         sum_pr += actPr[0][i]
@@ -70,18 +73,6 @@ def get_action(actPr):
             return i
     return actions - 1
 
-
-def get_action1(actPr):
-    actions = actPr.shape[0]
-    temp = np.random.uniform(0, 1)
-    sum_pr = 0
-    # print(actPr, actions)
-
-    for i in range(actions):
-        sum_pr += actPr[i]
-        if temp <= sum_pr:
-            return i
-    return actions - 1
 
 
 def test():

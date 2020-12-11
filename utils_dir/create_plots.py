@@ -1,16 +1,20 @@
 import matplotlib.pyplot as plt
-from utils_dir.gather_results import gather_results
+from gather_results import gather_results
 import numpy as np
 
 csv_path = 'experiment_results/csv/'
 img_path = 'images/'
+
+"""
+This code is taken from the https://aisafety.cs.umass.edu tutorial
+"""
 
 
 def loadAndPlotResults(fileName, ylabel, output_file, is_yAxis_prob, legend_loc):
     file_ms, file_QSA, file_QSA_stderror, file_LS, file_LS_stderror = np.loadtxt(fileName, delimiter=',', unpack=True)
 
     fig = plt.figure()
-
+    print(file_ms)
     plt.xlim(min(file_ms), max(file_ms))
     plt.xlabel("Amount of data (m)", fontsize=16)
     plt.xscale('log')

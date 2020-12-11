@@ -8,6 +8,11 @@ bin_path = 'experiment_results/bin/'
 csv_path = 'experiment_results/csv/'
 
 
+"""
+This code is taken from the https://aisafety.cs.umass.edu tutorial
+"""
+
+
 def get_existing_experiment_numbers():
     result_files = glob.glob(bin_path + 'results*.npz')
     experiment_numbers = [re.search('.*results([0-9]*).*', fn, re.IGNORECASE) for fn in result_files]
