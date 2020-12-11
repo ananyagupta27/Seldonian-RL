@@ -1,5 +1,4 @@
-import numpy as np
-from helper import *
+from utils.helper import *
 
 class Model:
     """

@@ -1,4 +1,4 @@
-from helper import *
+from utils.helper import *
 import sys
 import os
 
@@ -6,7 +6,6 @@ sys.path.insert(1, os.path.join(os.path.dirname(sys.path[0]), 'environments'))
 sys.path.insert(1, os.path.join(os.path.dirname(sys.path[0]), 'optimizers'))
 
 from environments.gridworldv2 import Gridworldv2
-from environments.mountaincar import Mountaincar
 
 """
 This class is responsible for data generation by either running the environment for given number of episodes 
