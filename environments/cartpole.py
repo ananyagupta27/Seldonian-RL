@@ -52,6 +52,10 @@ class Cartpole(Environment):
         self.discrete = discrete
 
     @property
+    def name(self):
+        return "Cartpole"
+
+    @property
     def isEnd(self) -> bool:
         return self._isEnd
 

@@ -25,6 +25,10 @@ class Gridworld687(Environment):
         self.discrete = discrete
 
     @property
+    def name(self):
+        return "Gridworld687"
+
+    @property
     def isEnd(self):
         pass
 

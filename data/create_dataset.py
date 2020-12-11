@@ -8,14 +8,24 @@ sys.path.insert(1, os.path.join(os.path.dirname(sys.path[0]), 'optimizers'))
 from environments.gridworldv2 import Gridworldv2
 from environments.mountaincar import Mountaincar
 
+"""
+This class is responsible for data generation by either running the environment for given number of episodes 
+or reading data from file and saving the episodes and timesteps of data including states, actions, rewards, behavior policy
+"""
+
 
 class Dataset:
+
 
     def __init__(self, episodes=None, env=None):
         self.env = env
         self.episodes = episodes
 
     def generate_dataset(self, theta):
+        """
+        :param theta: parameterized initial behavior policy to be run to get the data from the environment
+        :return: dataset
+        """
         choices = self.env.getNumActions()
         N = self.episodes
         theta = theta.reshape(-1, choices)
@@ -39,7 +49,10 @@ class Dataset:
                 pi_b[i].append(pi[0][a])
                 actions[i].append(a)
 
-                if type(self.env) is Mountaincar:
+
+                # For mountain car take step with same action 4 times as described in the paper
+                # https://arxiv.org/pdf/1511.03722.pdf
+                if self.env.name is "Mountaincar":
                     r = 0
                     for _ in range(4):
                         _, r, ended = self.env.step(a)
@@ -58,10 +71,21 @@ class Dataset:
 
 
     def get_dataset_from_file(self, filename):
+        """
+
+        :param filename: name of the file from which to read data of the format
+
+        episodes
+        timesteps
+        state, action, reward, pi_b
+        state, action, reward, pi_b
+        ....................
+
+        :return: dataset
+        """
         fileForInput = open(filename, 'r')
         no_of_episodes = int(fileForInput.readline())
-        # no_of_episodes = 100
-        # print(int(no_of_episodes)
+
         states = [[] for _ in range(no_of_episodes)]
         actions = [[] for _ in range(no_of_episodes)]
         rewards = [[] for _ in range(no_of_episodes)]

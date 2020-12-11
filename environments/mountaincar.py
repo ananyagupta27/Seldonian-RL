@@ -44,6 +44,11 @@ class Mountaincar(Environment):
         self._t = 0.0  # total time elapsed  NOTE: USE must use this variable
         self.discrete = discrete
 
+
+    @property
+    def name(self):
+        return "Mountaincar"
+
     @property
     def isEnd(self) -> bool:
         return self._isEnd

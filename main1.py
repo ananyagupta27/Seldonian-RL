@@ -15,13 +15,12 @@ from estimators.is_estimates import *
 from data.create_dataset import Dataset
 from data.create_model import Model
 from gHats import *
-
+from bounds.confidence_intervals import *
 # param1 = int(sys.argv[1])
 param1 = 0
 discrete = 1
 
 bin_path = 'experiment_results/bin/'
-# BENCHMARK_PERFORMANCE = 10
 
 class QSA:
 
@@ -52,42 +51,19 @@ class QSA:
         result, estimates = self.fHat(thetaToEvaluate, self.candidateDataset, self.episodes, self.env)
         resf = result
 
-        # for i in range(len(self.gHats)):  # Loop over behavioral constraints, checking each
-        passed, lb = self.safety_test(estimates, self.safetyDataSize, delta=0.01, factor=2)  # The current behavioral constraint being checked
+
+        passed, lb = self.safety_test(estimates, self.safetyDataSize, delta=0.01, factor=2)
 
         if not passed:
-            # Put a barrier in the objective. Any solution that we think will fail the safety test will have a
-            # large negative performance associated with it
+
             result = -100000.0
 
-            # Add a shaping to the objective function that will push the search toward solutions that will pass
-            # the prediction of the safety test
             result = result + lb
 
-        # Negative because our optimizer (Powell) is a minimizer, but we want to maximize the candidate objective
-        #    print("result=",-result,"fhat=",resf, "upperboudn", upperBound)
-        # if self.feval % 50 == 0:
-            # print("theta eval =", thetaToEvaluate)
-            # filename = str(param1)+'_'+str(param2)+'_'+str(trial)
-            # np.save(filename,thetaToEvaluate)
         print("result=", -result, "fhat=", resf, "upperboudn", lb, "passed", passed, self.BENCHMARK_PERFORMANCE)
         return -result
 
     def getCandidateSolution(self):
-        """
-
-        This function calls the optimizer with the evaluation function and dataset
-        and gets back argmin of the evaluation function or returns the candidate solution
-
-        :param candidataDataset:
-        :param episodes:
-        :param fHat:
-        :param gHats: safety constraints
-        :param deltas: failure rates for safety constraints
-        :param safetyDataSize: size of the safety dataset
-        :return: candidate solution
-        """
-        # theta = np.zeros((256 * 2))
         theta = np.zeros((self.env.getStateDims() * self.env.getNumActions()))
         optimizer = CMA(theta, self.candidateObjective)
         xMin = optimizer.run_optimizer()
@@ -100,12 +76,10 @@ class QSA:
             dataset[k].extend(self.safetyDataset[k])
         return dataset
 
-    def safety_test(self, is_estimates, size, delta=0.01, factor=1):
-        # is_estimates = get_PDIS_estimate(dataset, theta_c)
-        n = len(is_estimates)
-        lb = np.mean(is_estimates) - factor * (
-                np.std(is_estimates, ddof=1) / np.sqrt(size)) * t.ppf(1 - delta, size - 1)
-        # print(lb, np.mean(is_estimates), "std=",np.std(is_estimates, ddof=1), stats.t.ppf(1 - delta, n - 1))
+    def safety_test(self, is_estimates, size=None, delta=0.01, factor=1):
+        if not size:
+            size = len(is_estimates)
+        lb = ttestLB(is_estimates, size, delta, factor)
         return lb >= self.BENCHMARK_PERFORMANCE, lb
 
 
@@ -200,20 +174,20 @@ def run_experiments(worker_id, nWorkers, ms, numM, numTrials, mTest, env, gHats,
                 print(
                     f"[(worker {worker_id}/{nWorkers}) Seldonian trial {trial + 1}/{numTrials}, m {m}] No solution found",lb)
 
-            # theta = np.zeros((env.getStateDims() * env.getNumActions()))
-            # optimizer = CMA(theta, qsa.objectiveWithoutConstraints)
-            # xMin = optimizer.run_optimizer()
-            #
-            # # # Run the Least Squares algorithm
-            # # theta = leastSq(trainX, trainY)  # Run least squares linear regression
-            # trueEstimate, totalEstimates = qsa.fHat(xMin, safetyDataset, m, env)  # Get the "true" mean squared error using the testData
-            # LS_failures_g1[
-            #     trial, mIndex] = 1 if trueEstimate < env.threshold else 0  # Check if the first behavioral constraint was violated
-            # # LS_failures_g2[
-            # #     trial, mIndex] = 1 if trueEstimate < 1.25 else 0  # Check if the second behavioral constraint was violated
-            # LS_fs[trial, mIndex] = trueEstimate  # Store the "true" negative mean-squared error
-            # print(
-            #     f"[(worker {worker_id}/{nWorkers}) LeastSq   trial {trial + 1}/{numTrials}, m {m}] LS fHat over test data: {trueEstimate:.10f}")
+            theta = np.zeros((env.getStateDims() * env.getNumActions()))
+            optimizer = CMA(theta, qsa.objectiveWithoutConstraints)
+            xMin = optimizer.run_optimizer()
+
+            # # Run the Least Squares algorithm
+            # theta = leastSq(trainX, trainY)  # Run least squares linear regression
+            trueEstimate, totalEstimates = qsa.fHat(xMin, safetyDataset, m, env)  # Get the "true" mean squared error using the testData
+            LS_failures_g1[
+                trial, mIndex] = 1 if trueEstimate < env.threshold else 0  # Check if the first behavioral constraint was violated
+            # LS_failures_g2[
+            #     trial, mIndex] = 1 if trueEstimate < 1.25 else 0  # Check if the second behavioral constraint was violated
+            LS_fs[trial, mIndex] = trueEstimate  # Store the "true" negative mean-squared error
+            print(
+                f"[(worker {worker_id}/{nWorkers}) LeastSq   trial {trial + 1}/{numTrials}, m {m}] LS fHat over test data: {trueEstimate:.10f}")
         print()
 
     np.savez(outputFile,

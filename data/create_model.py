@@ -2,6 +2,11 @@ import numpy as np
 from helper import *
 
 class Model:
+    """
+    Create the MLE model from the dataset and estimate the transition and reward functions
+    Note - This assumes that states are discrete, environments mountaincar and gridworld versions support
+    the functionality to discretize the states
+    """
 
     def __init__(self, env, dataset, episodes, numStates, numActions, L):
         self.env = env
@@ -30,18 +35,16 @@ class Model:
         for i in range(self.episodes):
             trajectoryLength = len(states[i])
             for j in range(trajectoryLength):
-                # s = np.argmax(states[i][j])
+
+                # convert state to discrete
                 s = self.env.getDiscreteState(states[i][j])
                 a = actions[i][j]
                 r = rewards[i][j]
                 if j == trajectoryLength - 1:
                     sPrime = self.numStates
-                    # if sPrime ==0 :
-                    #     print("s=",s,"a=",a,"sp",sPrime)
+
                 else:
-                    # sPrime = np.argmax(states[i][j + 1])
                     sPrime = self.env.getDiscreteState(states[i][j + 1])
-                # print("state is", s, "action is", a, "sprime is", sPrime)
 
                 if j != trajectoryLength - 1:
                     stateActionStateCounts[s][a][sPrime] += 1
@@ -54,7 +57,6 @@ class Model:
                 R[s][a][sPrime] += r
 
         for i in range(self.episodes):
-            # d0[np.argmax(states[i][0])] += 1.0 / self.episodes
             d0[self.env.getDiscreteState(states[i][0])] += 1.0 / self.episodes
 
         rMin = rewards[0][0]
@@ -77,7 +79,10 @@ class Model:
                         R[s][a][sPrime] = 0
                     else:
                         R[s][a][sPrime] /= stateActionStateCounts[s][a][sPrime]
-                    # print("s ", s, " a ", a, " sprime ", sPrime, "P", p[s][a][sPrime], " R ", R[s][a][sPrime])
+
+        # estimating value functions given the behavior policy data
+        # This is useful for estimator DR_hat which does not calculate value functions for each evaluation
+        # policy generated during learning but instead uses the estimates from behavior policy
         Q, V = self.calculateValueFunctions(p, R, self.env)
         trajectories = {'states': states, 'actions': actions, 'rewards': rewards, 'pi_b': pi_b, 'p': p, 'R': R,
                         'd0': d0, 'V':V, 'Q':Q}
@@ -85,6 +90,13 @@ class Model:
         return trajectories
 
     def calculateValueFunctions(self, p, R, env):
+        """
+        Given p and R calculates the value functions considering a uniform random behavior policy
+        :param p:
+        :param R:
+        :param env:
+        :return:
+        """
         pi = self.pi
         numStates = env.getNumDiscreteStates()
         numActions = env.getNumActions()

@@ -23,6 +23,9 @@ class Gridworldv2(Environment):
         self.count = 0
         self.discrete = discrete
 
+    @property
+    def name(self):
+        return "Gridworldv2"
 
     @property
     def isEnd(self):

@@ -24,7 +24,9 @@ class Gridworld(Environment):
         self.numActions = 4
         self.discrete = discrete
 
-
+    @property
+    def name(self):
+        return "Gridworldv1"
 
     @property
     def gamma(self) -> float:

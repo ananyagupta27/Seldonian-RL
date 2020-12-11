@@ -2,6 +2,15 @@ from abc import ABC, abstractmethod
 
 
 class Environment(ABC):
+    """
+    Implement this class for any additional environments
+    """
+
+    @property
+    @abstractmethod
+    def name(self):
+        pass
+
     @property
     @abstractmethod
     def isEnd(self):
