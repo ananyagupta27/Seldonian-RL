@@ -3,6 +3,8 @@ import sys
 import os
 import ray  # To allow us to execute experiments in parallel
 
+from qsa import QSA
+
 ray.init()
 sys.path.insert(1, os.path.join(os.path.dirname(sys.path[0]), 'environments'))
 sys.path.insert(1, os.path.join(os.path.dirname(sys.path[0]), 'optimizers'))
@@ -21,71 +23,6 @@ param1 = 0
 discrete = 1
 
 bin_path = 'experiment_results/bin/'
-
-class QSA:
-
-    def __init__(self, env, episodes, fHat, gHats, deltas, candidateDataset, safetyDataset):
-        self.env = env
-        self.episodes = episodes
-        self.fHat = fHat
-        self.gHats = gHats
-        self.deltas = deltas
-        fourierBasisOrder = 4
-        self.safetyDataSize = episodes
-        self.candidateDataset = candidateDataset
-        self.safetyDataset = safetyDataset
-        self.BENCHMARK_PERFORMANCE = env.threshold
-        self.feval = 0
-
-
-    def candidateObjective(self, thetaToEvaluate):
-        """
-        This function takes in theta and dataset and safety constraints and returns the function value at
-        the inputted theta using barrier function in case of violation of constraints
-
-        :param thetaToEvaluate:
-        :return: result
-        """
-        self.feval = self.feval + 1
-        # importance sampling estimate
-        result, estimates = self.fHat(thetaToEvaluate, self.candidateDataset, self.episodes, self.env)
-        resf = result
-
-
-        passed, lb = self.safety_test(estimates, self.safetyDataSize, delta=0.01, factor=2)
-
-        if not passed:
-
-            result = -100000.0
-
-            result = result + lb
-
-        print("result=", -result, "fhat=", resf, "upperboudn", lb, "passed", passed, self.BENCHMARK_PERFORMANCE)
-        return -result
-
-    def getCandidateSolution(self):
-        theta = np.zeros((self.env.getStateDims() * self.env.getNumActions()))
-        optimizer = CMA(theta, self.candidateObjective)
-        xMin = optimizer.run_optimizer()
-        return xMin
-
-
-    def getTotalDataset(self):
-        dataset = self.candidateDataset.copy()
-        for k in dataset.keys():
-            dataset[k].extend(self.safetyDataset[k])
-        return dataset
-
-    def safety_test(self, is_estimates, size=None, delta=0.01, factor=1):
-        if not size:
-            size = len(is_estimates)
-        lb = ttestLB(is_estimates, size, delta, factor)
-        return lb >= self.BENCHMARK_PERFORMANCE, lb
-
-
-    def objectiveWithoutConstraints(self, thetaToEvaluate):
-        result, estimates = self.fHat(thetaToEvaluate, self.candidateDataset, self.episodes, self.env)
-        return -result
 
 
 # @ray.remote
@@ -143,7 +80,7 @@ def run_experiments(worker_id, nWorkers, ms, numM, numTrials, mTest, env, gHats,
             # Generate the training data, D
             # base_seed = (experiment_number * numTrials) + 1
             # np.random.seed(base_seed + trial)  # done to obtain common random numbers for all values of m
-            qsa = QSA(env, m, fHat, gHats, deltas,  candidateDataset, safetyDataset)  # Run the Quasi-Seldonian algorithm
+            qsa = QSA(env, m, fHat, gHats, deltas, candidateDataset, safetyDataset)  # Run the Quasi-Seldonian algorithm
 
             # Get the candidate solution
             solution = qsa.getCandidateSolution()

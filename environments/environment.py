@@ -64,48 +64,55 @@ class Environment(ABC):
     @abstractmethod
     def step(self, action):
         """
-        An action is taken in the environment and the next
-        state is entered.
-        output:
-            state -- the next state
-            reward -- the reward from taking the action
-            isEnd -- True if environment reset is required
+
+        :param action:
+        :return:
         """
         pass
 
     @abstractmethod
     def nextState(self, state, action):
         """
-        Provides the next state of the environment given an environment state
-        and an intended action.
-        output:
-            nextState: the next state
+
+        :param state:
+        :param action:
+        :return:
         """
         pass
 
     @abstractmethod
     def reset(self):
         """
-        The environment is reset.
+
+        :return:
         """
         pass
 
     @abstractmethod
     def R(self, state, action, nextState):
         """
-        The reward function. Defines the signal sent to the
-        learning agent as it interacts in the environment.
-        output:
-            reward -- the reward resulting from taking the
-                        last action in the environment.
+
+        :param state:
+        :param action:
+        :param nextState:
+        :return:
         """
         pass
 
 
     @abstractmethod
     def getDiscreteState(self, state):
+        """
+
+        :param state:
+        :return:
+        """
         pass
 
     @abstractmethod
     def getNumDiscreteStates(self):
+        """
+
+        :return:
+        """
         pass
