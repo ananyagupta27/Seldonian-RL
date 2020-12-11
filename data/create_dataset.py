@@ -1,4 +1,4 @@
-from utils.helper import *
+from utils_dir.helper import *
 import sys
 import os
 
@@ -51,7 +51,7 @@ class Dataset:
 
                 # For mountain car take step with same action 4 times as described in the paper
                 # https://arxiv.org/pdf/1511.03722.pdf
-                if self.env.name is "Mountaincar":
+                if self.env.name == "Mountaincar":
                     r = 0
                     for _ in range(4):
                         _, r, ended = self.env.step(a)

@@ -4,7 +4,7 @@ import math
 import sys
 import os
 
-from utils.fourier import get_transformed_state
+from utils_dir.fourier import get_transformed_state
 
 sys.path.insert(1, os.path.join(os.path.dirname(sys.path[0]), 'environments'))
 sys.path.insert(1, os.path.join(os.path.dirname(sys.path[0]), 'optimizers'))

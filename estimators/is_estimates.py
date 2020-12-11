@@ -1,10 +1,13 @@
-# from scipy.stats import t
-from utils.helper import *
-
+import sys
+import numpy as np
+import os
+from utils_dir.helper import *
 np.seterr(all='raise')
 
 sys.path.insert(1, os.path.join(os.path.dirname(sys.path[0]), 'environments'))
 sys.path.insert(1, os.path.join(os.path.dirname(sys.path[0]), 'optimizers'))
+sys.path.insert(1, os.path.join(os.path.dirname(sys.path[0]), 'utils_dir'))
+# from scipy.stats import t
 
 
 

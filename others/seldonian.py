@@ -15,7 +15,7 @@
 #
 # # from optimizers.cem import CEM
 # from optimizers.cmaes import CMAES
-# from optimizers.utils import getCountlist, fourierBasis
+# from optimizers.utils_dir import getCountlist, fourierBasis
 #
 # delta = 0.05
 #

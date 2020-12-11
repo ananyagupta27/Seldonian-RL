@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from utils.gather_results import gather_results
+from utils_dir.gather_results import gather_results
 import numpy as np
 
 csv_path = 'experiment_results/csv/'

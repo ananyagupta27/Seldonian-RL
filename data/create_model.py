@@ -1,4 +1,4 @@
-from utils.helper import *
+from utils_dir.helper import *
 
 class Model:
     """

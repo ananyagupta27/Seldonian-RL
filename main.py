@@ -3,11 +3,10 @@ import sys
 import os
 import ray  # To allow us to execute experiments in parallel
 
+from environments.gridworldv2 import Gridworldv2
 from qsa import QSA
 
 ray.init()
-sys.path.insert(1, os.path.join(os.path.dirname(sys.path[0]), 'environments'))
-sys.path.insert(1, os.path.join(os.path.dirname(sys.path[0]), 'optimizers'))
 
 from environments.gridworld687 import Gridworld687
 from environments.mountaincar import Mountaincar
@@ -16,7 +15,6 @@ from optimizers.optimizer_library import *
 from estimators.is_estimates import *
 from data.create_dataset import Dataset
 from data.create_model import Model
-from others.gHats import *
 from bounds.confidence_intervals import *
 # param1 = int(sys.argv[1])
 param1 = 0
@@ -26,7 +24,7 @@ bin_path = 'experiment_results/bin/'
 
 
 # @ray.remote
-def run_experiments(worker_id, nWorkers, ms, numM, numTrials, mTest, env, gHats, deltas):
+def run_experiments(worker_id, nWorkers, ms, numM, numTrials, mTest, env, delta):
     # Results of the Seldonian algorithm runs
     seldonian_solutions_found = np.zeros((numTrials, numM))  # Stores whether a solution was found (1=True,0=False)
     seldonian_failures_g1 = np.zeros(
@@ -80,7 +78,7 @@ def run_experiments(worker_id, nWorkers, ms, numM, numTrials, mTest, env, gHats,
             # Generate the training data, D
             # base_seed = (experiment_number * numTrials) + 1
             # np.random.seed(base_seed + trial)  # done to obtain common random numbers for all values of m
-            qsa = QSA(env, m, fHat, gHats, deltas, candidateDataset, safetyDataset)  # Run the Quasi-Seldonian algorithm
+            qsa = QSA(env, m, fHat, delta, candidateDataset, safetyDataset)  # Run the Quasi-Seldonian algorithm
 
             # Get the candidate solution
             solution = qsa.getCandidateSolution()
@@ -142,23 +140,16 @@ def run_experiments(worker_id, nWorkers, ms, numM, numTrials, mTest, env, gHats,
 def main():
     env_map = {0: 'Mountaincar', 1: 'Gridworld', 2: 'Gridworldv2', 3: 'Cartpole'}
     env_choice = param1
+    delta = 0.01
     print("Running environment ", env_choice, " Name ", env_map[env_choice])
     if env_choice == 0:
         env = Mountaincar(discrete=True)
-        gHats = [gHat1Mountaincar]
-        deltas = [0.1]
     elif env_choice == 1:
         env = Gridworld687()
-        gHats = [gHat1Gridworld]
-        deltas = [0.1]
     elif env_choice == 2:
         env = Gridworldv2()
-        gHats = [gHatGridworldv2]
-        deltas = [0.1]
     elif env_choice == 3:
         env = Cartpole()
-        gHats = [gHatCartpole]
-        deltas = [0.1]
     else:
         print("Wrong environment choice")
 
@@ -194,7 +185,7 @@ def main():
     # _ = ray.get(
     #     [run_experiments.remote(worker_id, nWorkers, ms, numM, numTrials, mTest, env, gHats, deltas) for worker_id in
     #      range(1, nWorkers + 1)])
-    run_experiments(0, nWorkers, ms, numM, numTrials, mTest, env, gHats, deltas)
+    run_experiments(0, nWorkers, ms, numM, numTrials, mTest, env, delta)
     toc = timeit.default_timer()
     time_parallel = toc - tic  # Elapsed time in seconds
     print(f"Time ellapsed: {time_parallel}")
