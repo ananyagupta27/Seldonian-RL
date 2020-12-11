@@ -11,6 +11,11 @@ sys.path.insert(1, os.path.dirname(sys.path[0]))
 
 from .optimizer import Optimizer
 
+"""
+https://en.wikipedia.org/wiki/CMA-ES
+Covariance matrix adaptation evolution strategy for optimization
+"""
+
 
 class CMAES(Optimizer):
 
@@ -55,8 +60,6 @@ class CMAES(Optimizer):
 
     def run_optimizer(self, verbose=True):
         countEval = 0
-        # prevBest = -np.inf
-        # best = -np.inf
 
         arx = np.zeros((self.N, int(self.lambd)))
         arfitness = np.zeros(int(self.lambd))
@@ -111,57 +114,11 @@ class CMAES(Optimizer):
                 print(f'At iteration count{countEval/self.lambd} best objective is {arfitness[0]}')
                 # print(f'Theta value is {arx[:, arindex[0]]}')
                 sys.stdout.flush()
-            # prevBest = best
-            # best = arfitness[0]
-            # if abs(prevBest - best) < 1e-10:
-            #     break
 
         xmin = arx[:, arindex[0]]
         return xmin
 
 
-
-
-
-
-def main():
-    episodes = int(sys.argv[1])
-    for _ in range(10):
-        theta = np.zeros((256 * 2))
-        evaluationFunction = CandidateCartpolePDIS
-        cmaes = CMAES(theta, evaluationFunction)
-        # print(evaluationFunction(cmaes.generation_loop()))
-        x_min = cmaes.run_optimizer(episodes)
-
-        # if it % 100 == 0:
-        #     print("episodes", episodes)
-        #     # print("x_min:=", x_min)
-        #     print("f_min:=", CandidateCartpolePDIS(x_min, episodes, multiplier=1))
-        #     sys.stdout.flush()
-        print("--------------------------")
-        print("x_min:=", x_min)
-        print("f_min:=", evaluationFunction(x_min, episodes, multiplier=1))
-        sys.stdout.flush()
-
-
-def another():
-    episodes = int(sys.argv[1])
-    for _ in range(10):
-        theta = np.zeros((16 * 3))
-        evaluationFunction = CandidateMountaincarPDIS
-        cmaes = CMAES(theta, evaluationFunction)
-        # print(evaluationFunction(cmaes.generation_loop()))
-        x_min = cmaes.run_optimizer(episodes)
-
-        # if it % 100 == 0:
-        #     print("episodes", episodes)
-        #     # print("x_min:=", x_min)
-        #     print("f_min:=", CandidateCartpolePDIS(x_min, episodes, multiplier=1))
-        #     sys.stdout.flush()
-        print("--------------------------")
-        print("x_min:=", x_min)
-        print("f_min:=", evaluationFunction(x_min, episodes, multiplier=1))
-        sys.stdout.flush()
 
 
 def func(x):

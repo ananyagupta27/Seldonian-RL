@@ -12,6 +12,10 @@ sys.path.insert(1, os.path.dirname(sys.path[0]))
 
 from .optimizer import Optimizer
 
+"""
+This file contains some black box optimizers from different libraries CMA, Powell and BFGS
+"""
+
 
 class Powell(Optimizer):
 
@@ -26,7 +30,6 @@ class Powell(Optimizer):
         return self.name
 
     def run_optimizer(self, verbose=True) -> np.ndarray:
-        # Chooses the black-box optimizer we will use (Powell)
         minimizer_method = 'Powell'
         minimizer_options = {'disp': False, 'maxfev': 1000, 'maxiter':1000}
 
@@ -55,11 +58,8 @@ class BFGS(Optimizer):
         # Chooses the black-box optimizer we will use (Powell)
         minimizer_method = 'BFGS'
         minimizer_options = {'disp': True, 'maxfev': 5, 'maxiter':5}
-
-        # Use Powell to get a candidate solution that tries to maximize candidateObjective
         res = minimize(self.evaluationFunction, x0=self.theta, method=minimizer_method, options=minimizer_options, tol=0.001)
 
-        # Return the candidate solution we believe will pass the safety test
         print(f'x_min inside bfgs {res.x}')
         print(f'function value at x_min is {self.evaluationFunction(res.x)}, Message is {res.message}')
         return res.x
@@ -81,12 +81,7 @@ class CMA(Optimizer):
         return self.name
 
     def run_optimizer(self, verbose=True) -> np.ndarray:
-        # Chooses the black-box optimizer we will use (Powell)
         candidate_solution = cma.fmin(self.evaluationFunction, self.theta.flatten(), self.sigma, options={'maxiter': self.iterations})[0]
-        # print(obj_function(candidate_solution))
-
-
-        # Return the candidate solution we believe will pass the safety test
         print(f'x_min inside cma {candidate_solution}')
         print(f'function value at x_min is {self.evaluationFunction(candidate_solution)}')
         return candidate_solution
