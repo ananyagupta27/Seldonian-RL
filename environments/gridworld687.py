@@ -6,6 +6,16 @@ from gym import spaces
 import copy
 from .environment import Environment
 
+"""
+The grid-world environment as described in the 687 course material. 
+https://people.cs.umass.edu/~pthomas/courses/CMPSCI_687_Fall2020/687_F20.pdf
+The agent must learn to move the cart forwards and backwards to keep the pole from falling.
+Actions: left (0), right (1), up (2) , down (3)
+Reward: 10 at (4,4), -10 at (4,2) and is 0 otherwise
+
+
+"""
+
 
 class Gridworld687(Environment):
 
@@ -56,6 +66,9 @@ class Gridworld687(Environment):
 
     def successful_action(self, a):
 
+        # transition to next state if the agent takes action a
+
+        # action is unsuccessful if the agent hits obstacles or the edges of the grid
         if a == 0 and ((self.x == 2 and self.y == 3) or (self.x == 3 and self.y == 3)):
             return
         if a == 1 and ((self.x == 2 and self.y == 1) or (self.x == 3 and self.y == 1)):
@@ -64,6 +77,8 @@ class Gridworld687(Environment):
             return
         if a == 3 and self.x == 1 and self.y == 2:
             return
+
+        # agent successfully transitions to next state
         if a == 0:
             self.y -= 1
         elif a == 1:
@@ -75,6 +90,7 @@ class Gridworld687(Environment):
         else:
             raise Exception("Action out of range! Must be in [0,3]: " + a)
 
+        # making sure the agent does not leave the grid
         self.x = int(np.clip(self.x, 0, self.size - 1))
         self.y = int(np.clip(self.y, 0, self.size - 1))
 
@@ -102,9 +118,11 @@ class Gridworld687(Environment):
                 a = 1
             else:
                 a = 0
+        # returns the effective action of the agent if it veers left or right
         return a
 
     def step(self, action):
+        # agent transitions to next state with the given action
         self.count += 1
         a = int(action)
 
@@ -118,7 +136,7 @@ class Gridworld687(Environment):
             new_a = self.veer(a, 1)  # changes depending on where robot is trying to go
             self.successful_action(new_a)
         elif 0.85 < prob <= 0.9:  # 5% of time
-            # veer left!
+            # veer left
             new_a = self.veer(a, 0)
             self.successful_action(new_a)
 
@@ -134,6 +152,7 @@ class Gridworld687(Environment):
         pass
 
     def reset(self):
+        # place the agent at the beginning of the grid
         self.x = 0
         self.y = 0
         self.count = 0
@@ -143,14 +162,17 @@ class Gridworld687(Environment):
         pass
 
     def getState(self):
+        # one hot vector state representation
         x = np.zeros(self.numStates, dtype=np.float32)
         x[self.x * self.size + self.y] = 1
         return x
 
     def getDiscreteState(self, state):
+        # discretize the state
         return np.argmax(state)
 
     def getNumDiscreteStates(self):
+        # return the discrete state dimensions
         return self.getStateDims()
 
     def terminal(self):
@@ -158,6 +180,7 @@ class Gridworld687(Environment):
 
 
 def test():
+    # utility function to calculate the average return from this environment
     env = Gridworld687()
     avr = 0
     for i in range(100):

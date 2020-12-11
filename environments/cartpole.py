@@ -9,6 +9,7 @@ from gym import spaces
 
 class Cartpole(Environment):
     """
+    https://people.cs.umass.edu/~pthomas/courses/CMPSCI_687_Fall2020/687_F20.pdf
     The cart-pole environment as described in the 687 course material. This
     domain is modeled as a pole balancing on a cart. The agent must learn to
     move the cart forwards and backwards to keep the pole from falling.
@@ -17,7 +18,6 @@ class Cartpole(Environment):
     Environment Dynamics: See the work of Florian 2007
     (Correct equations for the dynamics of the cart-pole system) for the
     observation of the correct dynamics.
-    Borrowed from Phil Thomas's RL course Fall 2019. Written by Blossom Metevier and Scott Jordan
     """
 
     def __init__(self, discrete=False):
@@ -170,10 +170,7 @@ class Cartpole(Environment):
             return True  # cart hits end of track
         return False
 
-    @property
-    def t(self):
-        return self._t
-
+    # State Discretization not implemented for this environment
     def getDiscreteState(self, state):
         raise NotImplementedError
 
@@ -181,6 +178,7 @@ class Cartpole(Environment):
     def getNumDiscreteStates(self):
         raise NotImplementedError
 
+    # utility function for normalizing the states
     def normalizeStates(self, state):
         for i, _ in enumerate(range(4)):
             state[i] = (state[i] - self.observation_space.low[i]) / (
@@ -198,7 +196,6 @@ def test():
         while True:
             a = np.random.choice(2, 1)
             s, r, isEnd = env.step(a)
-            # print(s, r, isEnd)
             G += (env.gamma ** t) * r
 
             if isEnd:

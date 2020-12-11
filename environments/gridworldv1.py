@@ -6,6 +6,12 @@ from gym import spaces
 import copy
 from .environment import Environment
 
+"""
+A version of Gridworld with 5*5 dimensions, gamma=1 
+Here rewards are -1 always, so the agent is incentivized to reach the TAS asap
+Actions fail with 0.1 probability otherwise succeed
+"""
+
 
 class Gridworld(Environment):
     def __init__(self, size=5, gamma=1, discrete=True):
@@ -18,8 +24,6 @@ class Gridworld(Environment):
         self.numa = 4
         self.observation_space = spaces.Box(low=np.zeros(nums), high=np.ones(nums), dtype=np.float32)
         self.action_space = spaces.Discrete(self.numa)
-        # self._P = None
-        # self._R = None
         self._gamma = gamma
         self.numActions = 4
         self.discrete = discrete
@@ -69,9 +73,13 @@ class Gridworld(Environment):
         self.count += 1
         a = int(action)
         s = np.random.uniform(0, 1)
+
+        # agent breaks down and fails to act
         if s < 0.1:
             r=-1
             return self.get_state(), r, self.terminal()
+
+        # agent takes action successfully
         if a == 0:
             self.y -= 1
         elif a == 1:
@@ -115,31 +123,3 @@ class Gridworld(Environment):
 
     def getNumDiscreteStates(self):
         return self.getStateDims()
-
-# def test():
-#     env = Gridworld()
-#     avr = 0
-#     for i in range(500):
-#         G = 0
-#         env.reset()
-#         t = 0
-#         while True:
-#             a = np.random.choice(4,1)
-#             s, r, isEnd = env.step(a)
-#             G += r
-#
-#             if isEnd:
-#                 break
-#
-#
-#             t += 1
-#         print("episode=", i, " G", G, " t=",t,"count", env.count)
-#         avr += G
-#     print(avr/500,"avr")
-#
-#
-#
-# if __name__ == "__main__":
-#     test()
-
-    # 145.7059 143-147

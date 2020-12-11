@@ -9,15 +9,11 @@ from gym import spaces
 
 class Mountaincar(Environment):
     """
-    The cart-pole environment as described in the 687 course material. This
-    domain is modeled as a pole balancing on a cart. The agent must learn to
-    move the cart forwards and backwards to keep the pole from falling.
-    Actions: left (0) and right (1)
-    Reward: 1 always
-    Environment Dynamics: See the work of Florian 2007
-    (Correct equations for the dynamics of the cart-pole system) for the
-    observation of the correct dynamics.
-    Borrowed from Phil Thomas's RL course Fall 2019. Written by Blossom Metevier and Scott Jordan
+    https://people.cs.umass.edu/~pthomas/courses/CMPSCI_687_Fall2020/687_F20.pdf
+    The mountaincar environment as described in the 687 course material.
+     The agent must learn to exit the valley in minimum timesteps.
+    Actions: left, right and no action
+    Reward: -1 always
     """
 
     def __init__(self, discrete=False):
@@ -71,7 +67,6 @@ class Mountaincar(Environment):
         """
         The threshold performance
         """
-        # return 58.5
         return -390
 
     def getNumActions(self):
@@ -88,7 +83,7 @@ class Mountaincar(Environment):
 
     def nextState(self, state: np.ndarray, action: int) -> np.ndarray:
         """
-        Compute the next state of the pendulum using the euler approximation to the dynamics
+        Dynamics equations to get the next state
         """
         u = float(action - 1)
         x, v = state
@@ -98,6 +93,7 @@ class Mountaincar(Environment):
 
         state = np.array([x, v])
 
+        # capping the states
         if state[0] < self.observation_space.low[0]:
             state[0] = self.observation_space.low[0]
             state[1] = 0
@@ -108,10 +104,8 @@ class Mountaincar(Environment):
 
     def R(self, state: np.ndarray, action: int, next_state: np.ndarray) -> float:
         """
-        returns a reward for the transition (state,action,next_state)
+        returns a reward for the transition (state,action,next_state) -1 always
         """
-        # if self.terminal() and self._x >= 0.05:
-        #     return 200
         return -1.0
 
     def step(self, action: int) -> Tuple[np.ndarray, float, bool]:
@@ -142,9 +136,8 @@ class Mountaincar(Environment):
     def terminal(self) -> bool:
         """
         terminates the episode if:
-            time is greater that 20 seconds
-            pole falls |theta| > (pi/12.0)
-            cart hits the sides |x| >= 3
+            timesteps are greater that 400 seconds
+            mountain car exits the valley and reaches top right
         """
         # 5000
         if self._t >= 400:
@@ -155,12 +148,9 @@ class Mountaincar(Environment):
 
 
     def getDiscreteState(self, state):
-        # print(state)
         state = self.normalizeState(state)
         discreteX = int(state[0] * pow(2, 3))
         discreteV = int(state[1] * pow(2, 4))
-        # print(state, discreteX, discreteV, int(discreteX * pow(2, 4) + discreteV))
-
         return int(discreteX * pow(2, 4) + discreteV)
 
     def normalizeState(self, state):
@@ -176,6 +166,7 @@ class Mountaincar(Environment):
         return state
 
 
+# utility function to test the average return for mountaincar
 def test():
     env = Mountaincar()
     avr = 0
@@ -190,8 +181,6 @@ def test():
             for _ in range(4):
                 s, r, isEnd = env.step(a)
             r = r*4
-            # s, r, isEnd = env.step(a)
-            # print(s, r, isEnd)
             G += (env.gamma ** t) * r
 
             if isEnd:

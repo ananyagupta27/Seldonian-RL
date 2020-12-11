@@ -6,6 +6,11 @@ from gym import spaces
 import copy
 from .environment import Environment
 
+"""
+Another version of Gridworld where actions are always successful
+Gamma=1, HorizonLength=100, Dimensions=4*4
+Rewars=100 at (3,3) and -1 otherwise
+"""
 
 class Gridworldv2(Environment):
 

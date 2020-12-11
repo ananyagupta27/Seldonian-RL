@@ -13,7 +13,7 @@ from optimizers.optimizer_library import Powell
 from estimators.is_estimates import *
 from data.create_dataset import Dataset
 from data.create_model import Model
-from trash.gHats import *
+from others.gHats import *
 
 # param1 = int(sys.argv[1])
 param1 = 1
