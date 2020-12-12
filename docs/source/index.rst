@@ -9,7 +9,7 @@ Welcome to Seldonian RL library documentation!
    first_steps
    data_generation
    environment
-   is_estimates
+   is_estimators
    confidence_intervals
    optimizers
    qsa
