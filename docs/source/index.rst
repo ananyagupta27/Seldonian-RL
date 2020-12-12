@@ -6,14 +6,14 @@ Welcome to Seldonian RL library documentation!
    :caption: Contents:
 
    introduction
+   first_steps
+   environment
    data_generation
-   environments
-   is_estimators
+   is_estimates
    confidence_intervals
    optimizers
    qsa
    lagrangian
    references
-
 
 

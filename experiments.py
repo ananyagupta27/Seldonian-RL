@@ -16,7 +16,7 @@ from environments.mountaincar import Mountaincar
 from optimizers.optimizer_library import *
 from optimizers.cem import *
 from optimizers.cmaes import *
-from estimators.is_estimates import *
+from estimators.is_estimators import *
 from data.create_dataset import Dataset
 from data.create_model import Model
 from bounds.confidence_intervals import *

@@ -13,20 +13,18 @@ mkdir -p $log_dir
 
 for TRIAL in 1 2 3 4 5 6 7
 do
-  for ENV in 0 1 2
+  for ENV in 0 1 2 3 4
   do
-    for EPISODES in 5 10 100 500 1000 5000 10000
-    do
-        sbatch -J safety \
-                  -e $log_dir/cp${ENV}_${EPISODES}_${TRIAL}.err \
-                  -o $log_dir/cp${ENV}_${EPISODES}_${TRIAL}.log \
-                  --mem=10000 \
-                  --partition=defq \
-                  --nodes=1 \
-                  --ntasks=1 \
-                  --time=0-11:00:00 \
-                  bin/starter.sh $ENV $EPISODES $TRIAL
+    sbatch -J safety \
+              -e $log_dir/cp${ENV}_${TRIAL}.err \
+              -o $log_dir/cp${ENV}_${TRIAL}.log \
+              --mem=10000 \
+              --partition=defq \
+              --nodes=1 \
+              --ntasks=1 \
+              --time=0-11:00:00 \
+              bin/starter.sh $ENV $TRIAL
 
-    done
+
   done
 done

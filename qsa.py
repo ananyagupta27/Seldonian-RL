@@ -2,9 +2,7 @@ import numpy as np
 
 from bounds.confidence_intervals import *
 from optimizers.optimizer_library import *
-from estimators.is_estimates import *
-
-
+from estimators.is_estimators import *
 
 """
 Quasi-Seldonian RL Algorithm
@@ -16,7 +14,8 @@ Return candidate soliution after candidate selection optimization using an optim
 
 class QSA:
 
-    def __init__(self, env=None, episodes=100, fHat=PDIS, delta=0.01, candidateDataset=None, safetyDataset=None, optimizer=CMA, cis=ttestLB):
+    def __init__(self, env=None, episodes=100, fHat=PDIS, delta=0.01, candidateDataset=None, safetyDataset=None,
+                 optimizer=CMA, cis=ttestLB):
         self.env = env
         self.episodes = episodes
         self.fHat = fHat
@@ -28,7 +27,6 @@ class QSA:
         self.feval = 0
         self.optimizer = optimizer
         self.cis = cis
-
 
     def candidateObjective(self, thetaToEvaluate):
         """
@@ -55,11 +53,11 @@ class QSA:
             result = result + lb
 
         # printing the current iteration results
-        print("result=", -result, "fhat=", mean_estimate, "lowerbound=", lb, "passed=", passed, "benchmark performance=", self.BENCHMARK_PERFORMANCE)
+        print("result=", -result, "fhat=", mean_estimate, "lowerbound=", lb, "passed=", passed,
+              "benchmark performance=", self.BENCHMARK_PERFORMANCE)
 
         # negating the current function value as minimizing the function
         return -result
-
 
     def getCandidateSolution(self):
         """
@@ -75,7 +73,6 @@ class QSA:
 
         # return the candidate solution
         return xMin
-
 
     def getTotalDataset(self):
         """
@@ -104,7 +101,6 @@ class QSA:
             size = len(is_estimates)
         lb = self.cis(is_estimates, size, delta, factor)
         return lb >= self.BENCHMARK_PERFORMANCE, lb
-
 
     def objectiveWithoutConstraints(self, thetaToEvaluate):
         """
