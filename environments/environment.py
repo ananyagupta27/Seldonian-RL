@@ -68,7 +68,7 @@ class Environment(ABC):
     def getStateDims(self):
         """
         :return: the dimenstions of the states
-        if using fourier basis (order+1)^|s|
+        if using fourier basis
         """
         pass
 

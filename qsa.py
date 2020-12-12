@@ -4,12 +4,16 @@ from bounds.confidence_intervals import *
 from optimizers.optimizer_library import *
 from estimators.is_estimators import *
 
+
+
 """
 Quasi-Seldonian RL Algorithm
 
 Takes environment, episodes, importance sampling estimator, failure rate delta, and dataset
-Return candidate soliution after candidate selection optimization using an optimizer with barrier function
+Return candidate solution after candidate selection optimization using an optimizer with barrier function
 """
+
+
 
 
 class QSA:
@@ -36,6 +40,7 @@ class QSA:
         :param thetaToEvaluate:
         :return: result
         """
+
         self.feval = self.feval + 1
         # importance sampling estimate
         result, estimates = self.fHat(thetaToEvaluate, self.candidateDataset, self.episodes, self.env)
@@ -59,11 +64,17 @@ class QSA:
         # negating the current function value as minimizing the function
         return -result
 
+
+
     def getCandidateSolution(self):
+
+
         """
         Candidate selection using the given optimizer finds the best value over the candidate dataset
         :return: the optimal value of parameter for the policy
         """
+
+
         # initializing parameter for the policy as all zeros which gives a random policy after softmax
         theta = np.zeros((self.env.getStateDims() * self.env.getNumActions()))
 
@@ -83,20 +94,26 @@ class QSA:
             dataset[k].extend(self.safetyDataset[k])
         return dataset
 
+
+
     def safety_test(self, is_estimates, size=None, delta=0.01, factor=1):
+
         """
         performs safety test using high confidence lower bound
         checks if lower bound is above threshold with high confidence
         with a particular Cis e.g. ttest
+
         :param is_estimates: list of importance sampling estimates at the current value of policy parameter
         :param size: size of the safety dataset as we need to predict whether given candidate solution will
                     pass the safety test or not without the safety dataset but we have access to the safety dataset size
         :param delta: failure rate for the confidence interval
         :param factor: factor for increasing the confidence of the bound to be more conservative
-                    (possibly to prevent overfitting)
+                    possibly to prevent overfitting
         :return: passed: whether the safety test is passed or not
         :return: lower_bound: the lower bound for the interval
         """
+
+
         if not size:
             size = len(is_estimates)
         lb = self.cis(is_estimates, size, delta, factor)
