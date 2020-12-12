@@ -22,8 +22,7 @@ sys.path.insert(0, os.path.abspath('../../bounds'))
 sys.path.insert(0, os.path.abspath('../../estimators'))
 sys.path.insert(0, os.path.abspath('../../utils_dir'))
 sys.path.insert(0, os.path.abspath('..'))
-from recommonmark.transform import AutoStructify
-from recommonmark.parser import CommonMarkParser
+
 
 
 
