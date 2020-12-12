@@ -67,8 +67,7 @@ class Environment(ABC):
     @abstractmethod
     def getStateDims(self):
         """
-        :return: the dimenstions of the states
-        if using fourier basis
+        :return: the dimensions of the states and if using fourier basis feature dimension
         """
         pass
 
