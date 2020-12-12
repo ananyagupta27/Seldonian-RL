@@ -9,10 +9,10 @@ Welcome to Seldonian RL library documentation!
    first_steps
    data_generation
    environment
-   modules
+   modules2
    modules1
    optimizers
-   qsa
+   modules
    lagrangian
    references
 

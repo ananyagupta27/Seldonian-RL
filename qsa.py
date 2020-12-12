@@ -1,4 +1,4 @@
-import numpy as np
+
 
 from bounds.confidence_intervals import *
 from optimizers.optimizer_library import *
