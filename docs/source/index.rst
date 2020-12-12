@@ -9,8 +9,8 @@ Welcome to Seldonian RL library documentation!
    first_steps
    data_generation
    environment
-   is_estimators
-   confidence_intervals
+   modules
+   modules1
    optimizers
    qsa
    lagrangian
