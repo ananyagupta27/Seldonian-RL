@@ -12,7 +12,7 @@ Welcome to Seldonian RL library documentation!
    modules2
    modules1
    optimizers
-   modules
+   qsa
    lagrangian
    references
 
