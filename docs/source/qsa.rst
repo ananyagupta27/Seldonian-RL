@@ -1,0 +1,2 @@
+QSA - Quasi Seldonian Algorithm
+===============================
