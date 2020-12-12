@@ -6,3 +6,5 @@ This repository contains the implementation of Seldonian RL algorithms, which en
 # For documentation refer to
 https://seldonian-rl.readthedocs.io/en/latest/index.html
 
+# For examples refer to
+https://github.com/ananyagupta27/Seldonian-RL/tree/main/examples
