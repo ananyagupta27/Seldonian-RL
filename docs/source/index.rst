@@ -7,8 +7,8 @@ Welcome to Seldonian RL library documentation!
 
    introduction
    first_steps
-   environment
    data_generation
+   environment
    is_estimates
    confidence_intervals
    optimizers
