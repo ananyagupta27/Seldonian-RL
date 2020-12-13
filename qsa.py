@@ -58,8 +58,8 @@ class QSA:
             result = result + lb
 
         # printing the current iteration results
-        print("result=", -result, "fhat=", mean_estimate, "lowerbound=", lb, "passed=", passed,
-              "benchmark performance=", self.BENCHMARK_PERFORMANCE)
+        # print("result=", -result, "fhat=", mean_estimate, "lowerbound=", lb, "passed=", passed,
+        #       "benchmark performance=", self.BENCHMARK_PERFORMANCE)
 
         # negating the current function value as minimizing the function
         return -result
