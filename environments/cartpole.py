@@ -33,7 +33,7 @@ class Cartpole(Environment):
         ranges[1, :] = [-10., 10.]
         ranges[2, :] = [-np.pi / 12, np.pi / 12]
         ranges[3, :] = [-np.pi, np.pi]
-        self.observation_space = spaces.Box(ranges[:, 0], ranges[:, 1], dtype=np.float64)
+        self.observation_space = spaces.Box(ranges[:, 0], ranges[:, 1])
         self.action_space = spaces.Discrete(2)
 
         self._x = 0.  # horizontal position of cart

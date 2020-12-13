@@ -22,7 +22,7 @@ class Gridworldv1(Environment):
         nums = self.size ** 2
         self.nums = nums
         self.numa = 4
-        self.observation_space = spaces.Box(low=np.zeros(nums), high=np.ones(nums), dtype=np.float32)
+        self.observation_space = spaces.Box(low=np.zeros(nums), high=np.ones(nums))
         self.action_space = spaces.Discrete(self.numa)
         self._gamma = gamma
         self.numActions = 4

@@ -27,7 +27,7 @@ class Mountaincar(Environment):
         ranges = np.zeros((2, 2))
         ranges[0, :] = [-1.2, 0.5]
         ranges[1, :] = [-0.07, 0.07]
-        self.observation_space = spaces.Box(ranges[:, 0], ranges[:, 1], dtype=np.float64)
+        self.observation_space = spaces.Box(ranges[:, 0], ranges[:, 1])
         self.action_space = spaces.Discrete(3)
 
         self._x = 0.  # horizontal position of car
