@@ -148,9 +148,10 @@ class Mountaincar(Environment):
 
 
     def getDiscreteState(self, state):
-        state = self.normalizeState(state)
-        discreteX = int(state[0] * pow(2, 3))
-        discreteV = int(state[1] * pow(2, 4))
+        state_copy = state.copy()
+        state_copy = self.normalizeState(state_copy)
+        discreteX = int(state_copy[0] * pow(2, 3))
+        discreteV = int(state_copy[1] * pow(2, 4))
         return int(discreteX * pow(2, 4) + discreteV)
 
     def normalizeState(self, state):

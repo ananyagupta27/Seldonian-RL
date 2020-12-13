@@ -75,25 +75,6 @@ def get_action(actPr, axis=1):
 
 
 
-def split_discrete_dataset(dataset, split_ratio):
-    states = dataset['states']
-    actions = dataset['actions']
-    rewards = dataset['rewards']
-    pi_b = dataset['pi_b']
-    p = dataset['p']
-    R = dataset['R']
-    d0 = dataset['d0']
-    V = dataset['V']
-    Q = dataset['Q']
-    states_train, states_test, actions_train, actions_test, rewards_train, rewards_test, pi_b_train, pi_b_test, \
-    p_train, p_test, R_train, R_test, d0_train, d0_test, V_train, V_test, Q_train, Q_test = \
-        train_test_split(states, actions, rewards, pi_b, p, R, d0, V, Q, test_size=split_ratio, random_state=42)
-    safetyDataset = {'states': states_test, 'actions': actions_test, 'rewards': rewards_test,
-                     'pi_b': pi_b_test, 'p': p_test, 'R': R_test, 'd0': d0_test, 'V': V_test, 'Q': Q_test}
-    candidateDataset = {'states': states_train, 'actions': actions_train, 'rewards': rewards_train,
-                        'pi_b': pi_b_train, 'p': p_train, 'R': R_train, 'd0': d0_train, 'V': V_train, 'Q': Q_train}
-
-    return candidateDataset, safetyDataset
 
 
 def split_dataset(dataset, split_ratio):
