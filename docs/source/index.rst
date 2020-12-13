@@ -7,11 +7,11 @@ Welcome to Seldonian RL library documentation!
 
    introduction
    first_steps
-   data_generation
+   create_dataset
    environment
-   modules2
-   modules1
-   optimizers
+   is_estimators
+   confidence_intervals
+   optimizer
    qsa
    lagrangian
    references

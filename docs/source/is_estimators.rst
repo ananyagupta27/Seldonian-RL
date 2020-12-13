@@ -1,5 +1,5 @@
-is\_estimators module
-=====================
+IS Estimators
+=============
 
 .. automodule:: is_estimators
    :members:

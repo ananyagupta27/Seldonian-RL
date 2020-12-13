@@ -1,5 +1,5 @@
-qsa module
-==========
+QSA Library
+===========
 
 .. automodule:: qsa
    :members:

@@ -1,5 +1,5 @@
-confidence\_intervals module
-============================
+Confidence Intervals
+====================
 
 .. automodule:: confidence_intervals
    :members:

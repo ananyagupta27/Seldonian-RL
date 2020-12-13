@@ -7,14 +7,14 @@ sys.path.insert(1, os.path.join(os.path.dirname(sys.path[0]), 'optimizers'))
 
 from environments.gridworldv2 import Gridworldv2
 
-"""
-This class is responsible for data generation by either running the environment for given number of episodes 
-or reading data from file and saving the episodes and timesteps of data including states, actions, rewards, behavior policy
-"""
+
 
 
 class Dataset:
-
+    """
+    This class is responsible for data generation by either running the environment for given number of episodes
+    or reading data from file and saving the episodes and timesteps of data including states, actions, rewards, behavior policy
+    """
 
     def __init__(self, episodes=None, env=None):
         self.env = env
