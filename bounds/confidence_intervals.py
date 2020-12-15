@@ -54,7 +54,7 @@ def HoeffdingLB(is_estimates, size=None, delta=0.01, factor=1, b=1, a=0):
     return np.mean(is_estimates) - (b - a) * factor * (np.sqrt(np.log(1 / delta) / (2 * size)))
 
 
-def HoeffdingLB(is_estimates, size=None, delta=0.01, factor=1, b=1, a=0):
+def HoeffdingUB(is_estimates, size=None, delta=0.01, factor=1, b=1, a=0):
     if not size:
         size = len(is_estimates)
     return np.mean(is_estimates) + (b - a) * factor * (np.sqrt(np.log(1 / delta) / (2 * size)))
